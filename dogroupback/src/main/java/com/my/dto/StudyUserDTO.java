@@ -7,7 +7,7 @@ import java.util.List;
  * @author Chanmin Sung
  *
  */
-public class SyduyUserDTO extends UserDTO {
+public class StudyUserDTO extends UserDTO {
 	private int studyId;					//스터디 ID
 	private List<HomeworkDTO> HomeworkList;	//과제 리스트(제출한 과제)
 	
