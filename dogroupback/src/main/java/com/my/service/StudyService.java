@@ -119,7 +119,7 @@ public class StudyService {
 					created_at = created_at.replace("Z", "");
 					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 					java.util.Date eventUtilDate = formatter.parse(created_at);
-					java.util.Date todayUtilDate = formatter.parse(created_at);
+					java.util.Date todayUtilDate = formatter.parse(formatter.format(new java.util.Date()));
 					
 					if(eventUtilDate.equals(todayUtilDate)) {
 						return eventUtilDate;
