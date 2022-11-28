@@ -16,7 +16,6 @@ public class WalletDTO {
 	private String transactionUser;		//거래자(통장입출금 관련 거래일 경우 - 아닐 경우에는 NULL
 	private int transactionCategory;	//거래유형(1 : 정산금액(환급금)/2: 입장료/3: 충전금/4: 인출금
 	private int transactionMoney;		//거래금액
-	private int test2;
 	
 	public WalletDTO() {
 		super();
