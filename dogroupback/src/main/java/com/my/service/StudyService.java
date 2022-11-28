@@ -48,4 +48,4 @@ public class StudyService {
 	public List<StudyDTO> searchMyStudy(String email) throws FindException {
 		return repository.selectStudyByEmail(email);
 	}
-}}
+}
