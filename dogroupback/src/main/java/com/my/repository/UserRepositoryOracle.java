@@ -23,10 +23,7 @@ public class UserRepositoryOracle implements UserRepository {
 			preStmt.setString(1, inputUser.getEmail());
 			preStmt.setString(2, inputUser.getName());
 			preStmt.setString(3, inputUser.getPassword());
-			int row = preStmt.executeUpdate();
-			if(row == 1) {
-				System.out.println("성공적으로 DB에 회원 정보가 등록되었습니다.");
-			}
+			preStmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {

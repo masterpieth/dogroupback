@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 
-import com.my.dto.UserDTO;
 import com.my.repository.StudyRepository;
 
 public class StudyService {
