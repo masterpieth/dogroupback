@@ -24,7 +24,7 @@ public class StudyDTO {
 	private Date studyEndDate;			//스터디 종료일자
 	private int studyHomeworkPerWeek;	//스터디 주당 과제 횟수(1~7)
 	private int studyPaid;				//스터디 정산여부(최종 정산)
-	private String studyContnet;		//스터디 내용(게시글)
+	private String studyContent;		//스터디 내용(게시글)
 	
 	public int getStudyId() {
 		return studyId;
@@ -98,11 +98,11 @@ public class StudyDTO {
 	public void setStudyPaid(int studyPaid) {
 		this.studyPaid = studyPaid;
 	}
-	public String getStudyContnet() {
-		return studyContnet;
+	public String getStudyContent() {
+		return studyContent;
 	}
 	public void setStudyContnet(Clob clob) throws IOException, SQLException {
-		 this.studyContnet = clobToStr(clob);
+		 this.studyContent = clobToStr(clob);
 	}
 	
 	private String clobToStr(Clob clob) throws IOException, SQLException{
