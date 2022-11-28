@@ -1,4 +1,4 @@
-package com.my.vo;
+package com.my.dto;
 
 /**
  * 회원 DTO
