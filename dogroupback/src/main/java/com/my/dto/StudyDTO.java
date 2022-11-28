@@ -24,7 +24,32 @@ public class StudyDTO {
 	private Date studyEndDate;			//스터디 종료일자
 	private int studyHomeworkPerWeek;	//스터디 주당 과제 횟수(1~7)
 	private int studyPaid;				//스터디 정산여부(최종 정산)
-	private String studyContnet;		//스터디 내용(게시글)
+	private String studyContent;		//스터디 내용(게시글)
+	
+	
+	public StudyDTO() {
+		super();
+	}
+
+	public StudyDTO(int studyId, String userEmail, String studyTitle, int studySize, int studyFee,
+			int studyCertification, int studyDiligenceCutline, Date studyPostDate, Date studyStartDate,
+			Date studyEndDate, int studyHomeworkPerWeek, int studyPaid, String studyContnet) {
+		super();
+		this.studyId = studyId;
+		this.userEmail = userEmail;
+		this.studyTitle = studyTitle;
+		this.studySize = studySize;
+		this.studyFee = studyFee;
+		this.studyCertification = studyCertification;
+		this.studyDiligenceCutline = studyDiligenceCutline;
+		this.studyPostDate = studyPostDate;
+		this.studyStartDate = studyStartDate;
+		this.studyEndDate = studyEndDate;
+		this.studyHomeworkPerWeek = studyHomeworkPerWeek;
+		this.studyPaid = studyPaid;
+		this.studyContent = studyContent;
+	}
+	
 	
 	public int getStudyId() {
 		return studyId;
@@ -99,10 +124,10 @@ public class StudyDTO {
 		this.studyPaid = studyPaid;
 	}
 	public String getStudyContnet() {
-		return studyContnet;
+		return studyContent;
 	}
 	public void setStudyContnet(Clob clob) throws IOException, SQLException {
-		 this.studyContnet = clobToStr(clob);
+		 this.studyContent = clobToStr(clob);
 	}
 	
 	private String clobToStr(Clob clob) throws IOException, SQLException{
