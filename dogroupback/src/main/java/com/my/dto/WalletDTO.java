@@ -20,6 +20,19 @@ public class WalletDTO {
 	public WalletDTO() {
 		super();
 	}
+	
+	public WalletDTO(int transactionNo, String email, int walletBalance, Date transcationDate, int studyId,
+			String transactionUser, int transactionCategory, int transactionMoney) {
+		super();
+		this.transactionNo = transactionNo;
+		this.email = email;
+		this.walletBalance = walletBalance;
+		this.transcationDate = transcationDate;
+		this.studyId = studyId;
+		this.transactionUser = transactionUser;
+		this.transactionCategory = transactionCategory;
+		this.transactionMoney = transactionMoney;
+	}
 
 	public int getTransactionNo() {
 		return transactionNo;
