@@ -13,8 +13,12 @@ public class UserDTO {
 	private int userBalance;		//User 지갑 현재 총 잔액
 	private int status;				//User 현재상태 1:활성회원 / 0:탈퇴회원
 	
-	public UserDTO() {
+	public UserDTO(String email, String password , String name) {
 		super();
+		this.email= email;
+		this.password= password;
+		this.name = name;
+		
 	}
 
 	public String getEmail() {
