@@ -7,9 +7,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import com.my.dto.UserDTO;
-import com.my.exception.FindException;
 import com.my.repository.UserRepository;
-import com.my.repository.UserRepositoryOracle;
 
 public class UserService {
 	private UserRepository repository;
@@ -19,7 +17,7 @@ public class UserService {
 		try {
 			env.load(new FileInputStream(propertiesFileName));
 			String className = env.getProperty("user");
-			Class clazz = Class.forName(className);
+			Class<?> clazz = Class.forName(className);
 			Object obj = clazz.getDeclaredConstructor().newInstance();
 			repository = (UserRepository) obj;
 		} catch (IOException e) {
@@ -39,7 +37,6 @@ public class UserService {
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 	/**
@@ -49,12 +46,8 @@ public class UserService {
 	 * @throws Exception 
 	 * @throws SQLException 
 	 */
-
 	public void idDuplicateCheck(String email) throws SQLException, Exception {
-
-	
-			repository.selectUserByEmail(email);
-	
+		repository.selectUserByEmail(email);
 	}
 
 	/**

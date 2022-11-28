@@ -25,8 +25,4 @@ public interface UserRepository {
 	 */
 	
 	UserDTO selectUserByEmail(String email) throws FindException,SQLException, Exception;
-
 }
-
-	
-
