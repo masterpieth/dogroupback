@@ -19,7 +19,7 @@ public class StudyService {
 		Properties env = new Properties();					
 		try {
 			env.load(new FileInputStream(propertiesFileName));
-			String className = env.getProperty("order");	//클래스이름을 String 타입으로 찾아온것 
+			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
 			Class.forName(className); 	//JVM메모리에 로드한다
 			Class clazz = Class.forName(className); 		//객체생성 반환형이 object
 			Object obj = clazz.getDeclaredConstructor().newInstance();	
@@ -43,8 +43,9 @@ public class StudyService {
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		}
-}
-
-public List<StudyDTO> searchMyStudy(String email) throws FindException {
-	return repository.selectStudyByEmail(email);
+	}
+	
+	public List<StudyDTO> searchMyStudy(String email) throws FindException {
+		return repository.selectStudyByEmail(email);
+	}
 }
