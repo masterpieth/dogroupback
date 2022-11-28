@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.my.dto.StudyDTO;
+import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.sql.MyConnection;
 
@@ -15,7 +16,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 	private Connection conn = null;
 	private PreparedStatement preStmt = null;
 	private ResultSet rs = null;
-
+	
 	@Override
 	public List<StudyDTO> selectStudyByEmail(String email) throws FindException {
 		List<StudyDTO> list = new ArrayList<>();
@@ -56,25 +57,28 @@ public class StudyRepositoryOracle implements StudyRepository {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new FindException(e.getMessage());
-		}finally {
+		} finally {
 			MyConnection.close(rs, preStmt, conn);
 		}
-	
-	}	
-	
-	public static void main(String[] args) {
-		StudyRepository repository = new StudyRepositoryOracle();
-		List<StudyDTO> list;
+	}
+	/**
+	 * 
+	 */
+	@Override
+	public void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException {
 		try {
-			list = repository.selectStudyByEmail("user18@gmail.com");
-			for(StudyDTO i :list) {
-				
-				System.out.println(i.getStudyId());
-			}
-		} catch (FindException e) {
+			conn = MyConnection.getConnection();
+			String insertHomeworkByEmailSQL = "INSERT INTO HOMEWORK VALUES(?, ?, ?)";
+			preStmt = conn.prepareStatement(insertHomeworkByEmailSQL);
+			preStmt.setDate(1, created_at);
+			preStmt.setInt(2, studyId);
+			preStmt.setString(3, "user1@gmail.com");
+			preStmt.executeUpdate();
+			
+		} catch (Exception e) {
 			e.printStackTrace();
+			throw new AddException("HomeWork Insert 실패");
 		}
-		
 	}
 }
 
