@@ -26,6 +26,31 @@ public class StudyDTO {
 	private int studyPaid;				//스터디 정산여부(최종 정산)
 	private String studyContent;		//스터디 내용(게시글)
 	
+	
+	public StudyDTO() {
+		super();
+	}
+
+	public StudyDTO(int studyId, String userEmail, String studyTitle, int studySize, int studyFee,
+			int studyCertification, int studyDiligenceCutline, Date studyPostDate, Date studyStartDate,
+			Date studyEndDate, int studyHomeworkPerWeek, int studyPaid, String studyContnet) {
+		super();
+		this.studyId = studyId;
+		this.userEmail = userEmail;
+		this.studyTitle = studyTitle;
+		this.studySize = studySize;
+		this.studyFee = studyFee;
+		this.studyCertification = studyCertification;
+		this.studyDiligenceCutline = studyDiligenceCutline;
+		this.studyPostDate = studyPostDate;
+		this.studyStartDate = studyStartDate;
+		this.studyEndDate = studyEndDate;
+		this.studyHomeworkPerWeek = studyHomeworkPerWeek;
+		this.studyPaid = studyPaid;
+		this.studyContent = studyContent;
+	}
+	
+	
 	public int getStudyId() {
 		return studyId;
 	}
@@ -98,7 +123,7 @@ public class StudyDTO {
 	public void setStudyPaid(int studyPaid) {
 		this.studyPaid = studyPaid;
 	}
-	public String getStudyContent() {
+	public String getStudyContnet() {
 		return studyContent;
 	}
 	public void setStudyContnet(Clob clob) throws IOException, SQLException {
