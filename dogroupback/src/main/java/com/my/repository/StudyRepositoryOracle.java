@@ -62,7 +62,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 		}
 	}
 	/**
-	 * 
+	 * 과제를 insert한다
 	 */
 	@Override
 	public void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException {
@@ -72,7 +72,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 			preStmt = conn.prepareStatement(insertHomeworkByEmailSQL);
 			preStmt.setDate(1, created_at);
 			preStmt.setInt(2, studyId);
-			preStmt.setString(3, "user1@gmail.com");
+			preStmt.setString(3, email);
 			preStmt.executeUpdate();
 			
 		} catch (Exception e) {

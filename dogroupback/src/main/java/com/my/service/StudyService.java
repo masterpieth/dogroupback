@@ -60,7 +60,25 @@ public class StudyService {
 		return repository.selectStudyByEmail(email);
 	}
 	/**
-	 * Github 과제를 체크한다.
+	 * 버튼형 출석 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
+	 * @param email
+	 * @param studyId
+	 * @throws AddException
+	 */
+	public void checkTodayHomework(String email, int studyId) throws AddException {
+		try {
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			java.util.Date todayUtilDate = formatter.parse(formatter.format(new java.util.Date()));
+			Date created_at = new Date(todayUtilDate.getTime());
+			repository.insertHomeworkByEmail(email, studyId, created_at);
+		} catch(Exception e) {
+			e.printStackTrace();
+			throw new AddException("시스템 오류가 발생했습니다");
+		}
+	}
+	
+	/**
+	 * Github 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
 	 * @param email
 	 * @param studyId
 	 * @throws AddException
