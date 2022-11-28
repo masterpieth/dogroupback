@@ -3,15 +3,17 @@ package com.my.service;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import com.my.dto.UserDTO;
+import com.my.exception.FindException;
 import com.my.repository.UserRepository;
 import com.my.repository.UserRepositoryOracle;
 
 public class UserService {
 	private UserRepository repository;
-	
+
 	public UserService(String propertiesFileName) {
 		Properties env = new Properties();
 		try {
@@ -37,10 +39,27 @@ public class UserService {
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		}
+
 	}
+
+	/**
+	 * email로 아이디 중복체크한다
+	 * 아이디가 이미 존재하는 경우에 FindException
+	 * @param email
+	 * @throws Exception 
+	 * @throws SQLException 
+	 */
+
+	public void idDuplicateCheck(String email) throws SQLException, Exception {
+
 	
+			repository.selectUserByEmail(email);
+	
+	}
+
 	/**
 	 * 회원을 저장소에 추가한다.
+	 * 
 	 * @param inputUser 회원의 가입 정보
 	 * @return 회원 정보
 	 */
