@@ -3,9 +3,7 @@ package com.my.repository;
 import java.sql.SQLException;
 
 import com.my.dto.UserDTO;
-import com.my.exception.FindException;
-
-
+import com.my.exception.Exception;
 
 public interface UserRepository {
 	
@@ -23,6 +21,5 @@ public interface UserRepository {
 	 * @throws SQLException
 	 * @throws Exception
 	 */
-	
-	UserDTO selectUserByEmail(String email) throws FindException,SQLException, Exception;
+	UserDTO selectUserByEmail(String email) throws Exception;
 }

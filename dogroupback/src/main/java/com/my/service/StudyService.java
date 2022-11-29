@@ -27,7 +27,7 @@ public class StudyService {
 	
 	public StudyService() {
 		repository = new StudyRepositoryOracle();
-		String propertiesFileName = "repository.properties";	//3차수정을 외부파일에서 한다
+		String propertiesFileName = "repository.properties";	
 		Properties env = new Properties();					
 		try {
 //			env.load(new FileInputStream(propertiesFileName));
@@ -39,6 +39,7 @@ public class StudyService {
 //		} catch (IOException e) {
 //			e.printStackTrace();
 //		}	//연결된 자원을 읽는다. key = value  
+
 		catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
@@ -56,6 +57,12 @@ public class StudyService {
 		}
 	}
 	
+	/**
+	 * 진행중인 스터디를 검색한다.
+	 * @param email 스터디ID
+	 * @return 스터디 목록
+	 * @throws FindException 진행중인 스터디를 찾지못하면 FindException발생한다.
+	 */
 	public List<StudyDTO> searchMyStudy(String email) throws FindException {
 		return repository.selectStudyByEmail(email);
 	}

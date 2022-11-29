@@ -13,14 +13,14 @@ public class UserRepositoryOracle implements UserRepository {
 	private Connection conn = null;
 	private PreparedStatement preStmt = null;
 	private ResultSet rs = null;
-	
+
 	@Override
 	public void insertUser(UserDTO inputUser) {
-		//기본 성실도:50, 잔액:0, 상태:1
+		// 기본 성실도:50, 잔액:0, 상태:1
 		String insertUserSQL = "insert into users(user_email, user_name, user_password, user_diligence, user_balance, user_status)"
-							+ " values(?, ?, ?, 50, 0, 1)";
+				+ " values(?, ?, ?, 50, 0, 1)";
 		try {
-			conn =  MyConnection.getConnection();
+			conn = MyConnection.getConnection();
 			preStmt = conn.prepareStatement(insertUserSQL);
 			preStmt.setString(1, inputUser.getEmail());
 			preStmt.setString(2, inputUser.getName());
@@ -31,7 +31,39 @@ public class UserRepositoryOracle implements UserRepository {
 		} finally {
 			MyConnection.close(preStmt, conn);
 		}
-		
+
+	}
+
+	@Override
+	public UserDTO selectUserByEmail(String email) throws FindException {
+		// 내정보를 조회한다.
+		String selectUserByEmailSQL = "SELECT *FROM users WHERE user_email = ? ";
+
+		try {
+			conn = MyConnection.getConnection();
+			preStmt = conn.prepareStatement(selectUserByEmailSQL);
+
+			preStmt.setString(1, email);
+			rs = preStmt.executeQuery();
+			if (rs.next()) {
+				String name = rs.getString("user_name");
+				String password = rs.getString("user_password");
+				int diligence = rs.getInt("user_diligence");
+				int userBalance = rs.getInt("user_balance");
+				int status = rs.getInt("user_status");
+				UserDTO userInfo = new UserDTO(email, name, password, diligence, userBalance, status);
+				return userInfo;
+			} else {
+				throw new FindException("정보를 찾을수없습니다.");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FindException(e.getMessage());
+
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+		}
+
 	}
 
     @Override
