@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.my.dto.StudyDTO;
+import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.sql.MyConnection;
 
@@ -15,7 +16,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 	private Connection conn = null;
 	private PreparedStatement preStmt = null;
 	private ResultSet rs = null;
-
+	
 	@Override
 	public List<StudyDTO> selectStudyByEmail(String email) throws FindException {
 		//진행중인 스터디를 검색한다.
@@ -58,7 +59,24 @@ public class StudyRepositoryOracle implements StudyRepository {
 		} finally {
 			MyConnection.close(rs, preStmt, conn);
 		}
-
 	}
-
+	/**
+	 * 과제를 insert한다
+	 */
+	@Override
+	public void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException {
+		try {
+			conn = MyConnection.getConnection();
+			String insertHomeworkByEmailSQL = "INSERT INTO HOMEWORK VALUES(?, ?, ?)";
+			preStmt = conn.prepareStatement(insertHomeworkByEmailSQL);
+			preStmt.setDate(1, created_at);
+			preStmt.setInt(2, studyId);
+			preStmt.setString(3, email);
+			preStmt.executeUpdate();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AddException("HomeWork Insert 실패");
+		}
+	}
 }

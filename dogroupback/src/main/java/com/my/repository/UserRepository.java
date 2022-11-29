@@ -1,7 +1,9 @@
 package com.my.repository;
 
+import java.sql.SQLException;
+
 import com.my.dto.UserDTO;
-import com.my.exception.FindException;
+import com.my.exception.Exception;
 
 public interface UserRepository {
 	
@@ -12,11 +14,12 @@ public interface UserRepository {
 	void insertUser(UserDTO inputUser);
 
 	/**
-	 * 내 정보를 조회한다.
-	 * @param email 회원의 이메일
-	 * @return 회원 정보
-	 * @throws FindException 정보가 조회되지않으면 FindException 발생한다.
+	 * 이메일로 회원아이디에 해당하는 고객을 반환한다
+	 * @param email 아이디
+	 * @return 고객
+	 * @throws FindException 아이디에 해당하는 고객이 없으면 FindException발생한다
+	 * @throws SQLException
+	 * @throws Exception
 	 */
-	UserDTO selectUserByEmail(String email) throws FindException;
-	
+	UserDTO selectUserByEmail(String email) throws Exception;
 }
