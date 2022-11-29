@@ -13,6 +13,9 @@ public class UserDTO {
 	private int userBalance;		//User 지갑 현재 총 잔액
 	private int status;				//User 현재상태 1:활성회원 / 0:탈퇴회원
 	
+	public UserDTO() {
+		super();
+	}
 
 	public UserDTO(String email, String name, String password, int diligence, int userBalance, int status) {
 		super();
@@ -77,5 +80,4 @@ public class UserDTO {
 		return "UserDTO [email=" + email + ", name=" + name + ", password=" + password + ", diligence=" + diligence
 				+ ", userBalance=" + userBalance + ", status=" + status + "]";
 	}
-	
 }

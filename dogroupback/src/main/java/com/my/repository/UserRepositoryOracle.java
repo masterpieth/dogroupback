@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 
 import com.my.dto.UserDTO;
 import com.my.exception.FindException;
+import com.my.exception.AddException;
 import com.my.sql.MyConnection;
 
 public class UserRepositoryOracle implements UserRepository {
@@ -14,8 +15,9 @@ public class UserRepositoryOracle implements UserRepository {
 	private ResultSet rs = null;
 
 	@Override
-	public void insertUser(UserDTO inputUser) {
-		// 기본 성실도:50, 잔액:0, 상태:1
+	public void insertUser(UserDTO inputUser) throws AddException {
+		//기본 성실도:50, 잔액:0, 상태:1
+
 		String insertUserSQL = "insert into users(user_email, user_name, user_password, user_diligence, user_balance, user_status)"
 				+ " values(?, ?, ?, 50, 0, 1)";
 		try {
@@ -27,6 +29,7 @@ public class UserRepositoryOracle implements UserRepository {
 			preStmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw new AddException(e.getMessage());
 		} finally {
 			MyConnection.close(preStmt, conn);
 		}
@@ -36,7 +39,7 @@ public class UserRepositoryOracle implements UserRepository {
 	@Override
 	public UserDTO selectUserByEmail(String email) throws FindException {
 		// 내정보를 조회한다.
-		String selectUserByEmailSQL = "SELECT *FROM users WHERE user_email = ? ";
+		String selectUserByEmailSQL = "SELECT * FROM users WHERE user_email = ? ";
 
 		try {
 			conn = MyConnection.getConnection();

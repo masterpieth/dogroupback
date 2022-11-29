@@ -1,7 +1,5 @@
 package com.my.dto;
 
-import java.util.List;
-
 /**
  * 스터디 User DTO
  * @author Chanmin Sung
@@ -9,7 +7,16 @@ import java.util.List;
  */
 public class StudyUserDTO extends UserDTO {
 	private int studyId;					//스터디 ID
-	private List<HomeworkDTO> HomeworkList;	//과제 리스트(제출한 과제)
+	private HomeworkDTO homework;			//과제
+	
+	public StudyUserDTO() {						
+		super();
+	}
+	public StudyUserDTO(int studyId, HomeworkDTO homework) { 
+		super();
+		this.studyId = studyId;
+		this.homework = homework;
+	}
 	
 	public StudyUserDTO(String email, String name, String password, int diligence, int userBalance, int status) {
 		super(email, name, password, diligence, userBalance, status);
@@ -22,10 +29,10 @@ public class StudyUserDTO extends UserDTO {
 	public void setStudyId(int stduyId) {
 		this.studyId = stduyId;
 	}
-	public List<HomeworkDTO> getHomeworkList() {
-		return HomeworkList;
+	public HomeworkDTO getHomework() {
+		return homework;
 	}
-	public void setHomeworkList(List<HomeworkDTO> homeworkList) {
-		HomeworkList = homeworkList;
+	public void setHomework (HomeworkDTO homework) {
+		this.homework = homework;
 	}
 }

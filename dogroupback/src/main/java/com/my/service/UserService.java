@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import com.my.dto.UserDTO;
 import com.my.exception.FindException;
+import com.my.exception.AddException;
 import com.my.repository.UserRepository;
 
 public class UserService {
@@ -56,8 +57,9 @@ public class UserService {
 	 * 
 	 * @param inputUser 회원의 가입 정보
 	 * @return 회원 정보
+	 * @throws AddException 고객 추가 실패시 오류
 	 */
-	public UserDTO signUp(UserDTO inputUser) {
+	public UserDTO signUp(UserDTO inputUser) throws AddException {
 		repository.insertUser(inputUser);
 		return inputUser;
 	}

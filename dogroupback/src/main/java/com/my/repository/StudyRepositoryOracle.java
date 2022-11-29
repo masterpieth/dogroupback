@@ -7,7 +7,9 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
+
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.sql.MyConnection;
@@ -60,6 +62,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 			MyConnection.close(rs, preStmt, conn);
 		}
 	}
+	
 	/**
 	 * 과제를 insert한다
 	 */
@@ -77,6 +80,33 @@ public class StudyRepositoryOracle implements StudyRepository {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AddException("HomeWork Insert 실패");
+		}
+	}
+	
+	@Override
+	public HomeworkDTO selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException {
+		List<Date> homeworkList = new ArrayList<Date>();
+		String homeworListSQL = "select * from homework where "	
+								+ "study_id = ? and user_email = ? "
+								+ "and study_submit_dt >= (select study_start_date from study where study_id = ?)";
+		try {
+			conn = MyConnection.getConnection();
+			preStmt = conn.prepareStatement(homeworListSQL);
+			preStmt.setInt(1, studyId);
+			preStmt.setString(2, userEmail);
+			preStmt.setInt(3, studyId);
+			rs = preStmt.executeQuery(); //선택한 유저의 스터디 시작일 이후의 제출 과제 내역을 모두 가져온다.
+			
+			while (rs.next()) {
+				Date studySubmitDt = rs.getDate("study_submit_dt");
+				homeworkList.add(studySubmitDt);
+			}
+			return new HomeworkDTO(homeworkList, studyId, userEmail);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FindException(e.getMessage());
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
 		}
 	}
 }
