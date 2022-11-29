@@ -8,9 +8,9 @@ import com.my.exception.FindException;
 public interface StudyRepository {
 	
 	/**
-	 * @param email 스터디 id
-	 * @return 진행중인 스터디를 검색한다.
-	 * @throws FindException
+	 * @param email 스터디 ID
+	 * @return 진행중인 스터디 목록
+	 * @throws FindException 진행중인 스터디를 찾지못하면 FindException발생한다.
 	 */
 	List<StudyDTO> selectStudyByEmail(String email) throws FindException;
 	

@@ -15,19 +15,19 @@ public class StudyService {
 	private StudyRepository repository;
 	public StudyService() {
 		repository = new StudyRepositoryOracle();
-		String propertiesFileName = "repository.properties";	//3차수정을 외부파일에서 한다
+		String propertiesFileName = "repository.properties";	
 		Properties env = new Properties();					
 		try {
 			env.load(new FileInputStream(propertiesFileName));
-			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
-			Class.forName(className); 	//JVM메모리에 로드한다
-			Class clazz = Class.forName(className); 		//객체생성 반환형이 object
+			String className = env.getProperty("study");	
+			Class.forName(className); 	
+			Class clazz = Class.forName(className); 		
 			Object obj = clazz.getDeclaredConstructor().newInstance();	
 			repository = (StudyRepository)obj;
 			
 		} catch (IOException e) {
 			e.printStackTrace();
-		}	//연결된 자원을 읽는다. key = value  
+		}	
 		catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
@@ -45,6 +45,12 @@ public class StudyService {
 		}
 	}
 	
+	/**
+	 * 진행중인 스터디를 검색한다.
+	 * @param email 스터디ID
+	 * @return 스터디 목록
+	 * @throws FindException 진행중인 스터디를 찾지못하면 FindException발생한다.
+	 */
 	public List<StudyDTO> searchMyStudy(String email) throws FindException {
 		return repository.selectStudyByEmail(email);
 	}
