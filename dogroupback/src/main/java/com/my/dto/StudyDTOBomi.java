@@ -1,10 +1,5 @@
 package com.my.dto;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.SQLException;
 import java.util.List;
 
 /**

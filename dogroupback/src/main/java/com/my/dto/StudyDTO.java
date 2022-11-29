@@ -26,7 +26,6 @@ public class StudyDTO {
 	private int studyPaid;				//스터디 정산여부(최종 정산)
 	private String studyContent;		//스터디 내용(게시글)
 	
-	
 	public StudyDTO() {
 		super();
 	}

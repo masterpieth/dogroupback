@@ -16,6 +16,7 @@ import java.util.Properties;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
@@ -30,15 +31,14 @@ public class StudyService {
 		String propertiesFileName = "repository.properties";	//3차수정을 외부파일에서 한다
 		Properties env = new Properties();					
 		try {
-//			env.load(new FileInputStream(propertiesFileName));
-//			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
-			Class<?> clazz = Class.forName("com.my.repository.StudyRepositoryOracle"); 		//객체생성 반환형이 object
+			env.load(new FileInputStream(propertiesFileName));
+			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
+			Class<?> clazz = Class.forName(className); 		//객체생성 반환형이 object
 			Object obj = clazz.getDeclaredConstructor().newInstance();	
 			repository = (StudyRepository)obj;
-		}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}	//연결된 자원을 읽는다. key = value  
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	//연결된 자원을 읽는다. key = value  
 		catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
@@ -59,6 +59,11 @@ public class StudyService {
 	public List<StudyDTO> searchMyStudy(String email) throws FindException {
 		return repository.selectStudyByEmail(email);
 	}
+	
+    public HomeworkDTO searchMyStudyUserInfo(String email, int studyId) throws FindException {
+        return repository.selectUserHomeworkByEmail(email, studyId);
+    }
+	
 	/**
 	 * Github 과제를 체크한다.
 	 * @param email
@@ -75,7 +80,6 @@ public class StudyService {
 			throw new AddException("시스템 오류가 발생했습니다");
 		}
 	}
-	
 	/**
 	 * GithubEvent를 읽어온다.
 	 * @param email			//User의 이메일 정보

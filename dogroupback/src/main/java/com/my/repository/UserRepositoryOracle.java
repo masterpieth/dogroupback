@@ -37,16 +37,22 @@ public class UserRepositoryOracle implements UserRepository {
     @Override
     public UserDTO selectUserByEmail(String email) throws FindException, SQLException {
         UserDTO user;
-        String selectSQL = "SELECT * FROM users WHERE user_email=?";
+        String selectSQL = "SELECT * FROM users WHERE user_email= ? ";
         try {
             conn = MyConnection.getConnection();
             preStmt = conn.prepareStatement(selectSQL);
             preStmt.setString(1, email);
             rs = preStmt.executeQuery();
             if (rs.next()) {
-            return new UserDTO(rs.getString("user_email"), rs.getString("user_password"), rs.getString("user_name"));
-            }else {
-            throw new FindException("아이디에 해당하는 고객이없습니다.");
+                String name = rs.getString("user_name");
+                String password = rs.getString("user_password");
+                int diligence = rs.getInt("user_diligence");
+                int userBalance = rs.getInt("user_balance");
+                int status = rs.getInt("user_status");
+                UserDTO userInfo = new UserDTO(email, name, password, diligence, userBalance, status);
+                return userInfo;
+            } else {
+                throw new FindException("정보를 찾을수없습니다.");
             }
         } catch (SQLException e) {
             e.printStackTrace();

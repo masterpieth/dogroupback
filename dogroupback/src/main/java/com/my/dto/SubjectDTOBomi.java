@@ -4,9 +4,11 @@ public class SubjectDTOBomi {
 	private String subjectCode;
 	private String subjectName;
 	private SubjectDTOBomi subjectParent;
+	
 	public SubjectDTOBomi() {
-		
+		super();
 	}
+	
 	public SubjectDTOBomi(String subjectCode, String subjectName, SubjectDTOBomi subjectParent) {
 		super();
 		this.subjectCode = subjectCode;
