@@ -7,7 +7,9 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import com.my.dto.UserDTO;
+import com.my.exception.FindException;
 import com.my.repository.UserRepository;
+import com.my.repository.UserRepositoryOracle;
 
 public class UserService {
 	private UserRepository repository;
@@ -59,5 +61,19 @@ public class UserService {
 	public UserDTO signUp(UserDTO inputUser) {
 		repository.insertUser(inputUser);
 		return inputUser;
+	}
+	/**
+	 * 회원의 개인정보를 확인한다 .
+	 * @param email 회원의 정보
+	 * @return 회원 정보
+	 * @throws FindException 회원을 찾지못하면 FindException 발생한다.
+	 */
+	public UserDTO searchUserInfo(String email) throws FindException {
+		try {
+			return repository.selectUserByEmail(email);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FindException(e.getMessage());
+		}
 	}
 }

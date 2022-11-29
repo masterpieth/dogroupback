@@ -1,6 +1,7 @@
 package com.my.repository;
 
-import java.sql.Date;
+import java.sql.Connection;
+import java.util.Date;
 import java.util.List;
 
 import com.my.dto.HomeworkDTO;
@@ -8,6 +9,7 @@ import com.my.dto.StudyDTO;
 import com.my.dto.StudyDTOBomi;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
+import com.my.exception.RemoveException;
 
 public interface StudyRepository {
 
@@ -47,5 +49,31 @@ public interface StudyRepository {
 	 * @throws FindException 상세 조회중 오류시 발생
 	 */
 	StudyDTOBomi selectStudy(int studyId) throws FindException;
+	/**
+	 * 스터디를 Insert 한다
+	 * @param study
+	 */
+	void insertStudy(StudyDTO study);
 
+	/**
+	 * 스터디원을 Insert 한다 - 지갑 관련 추가-삭제 등을 담당하는 프로시저를 호출한다.
+	 * flag 1: 스터디원 추가
+	 * flag 0: 스터디원 삭제
+	 */
+	void insertStudyUser(StudyDTO study, String email) throws AddException;
+
+	/**
+	 * 스터디장을 insert 한다 - insertStudy에서 connection을 받아서 한 트랜잭션에 있도록 한다.
+	 * flag 1: 스터디원 추가
+	 * flag 0: 스터디원 삭제
+	 */
+	void insertStudyUserLeader(StudyDTO study, String email, Connection conn) throws AddException;
+	
+	/**
+	 * 스터디에서 탈퇴한다 - StudyUser 테이블에서 정보를 제거한다.
+	 * @param study				스터디정보
+	 * @param email				사용자이메일
+	 * @throws RemoveException
+	 */
+	void deleteStudyUser(StudyDTO study, String email) throws RemoveException;
 }
