@@ -35,8 +35,7 @@ public class UserRepositoryOracle implements UserRepository {
 	}
 
     @Override
-    public UserDTO selectUserByEmail(String email) throws FindException, SQLException {
-        UserDTO user;
+    public UserDTO selectUserByEmail(String email) throws FindException {
         String selectSQL = "SELECT * FROM users WHERE user_email= ? ";
         try {
             conn = MyConnection.getConnection();
@@ -54,13 +53,11 @@ public class UserRepositoryOracle implements UserRepository {
             } else {
                 throw new FindException("정보를 찾을수없습니다.");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
+            throw new FindException("정보를 찾을 수 없습니다.");
         } finally {
             MyConnection.close(rs, preStmt, conn);
         }
-        return null;
     }
 }

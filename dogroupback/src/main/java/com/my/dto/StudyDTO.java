@@ -3,8 +3,8 @@ package com.my.dto;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Clob;
-import java.sql.Date;
 import java.sql.SQLException;
+import java.util.Date;
 
 /**
  * 스터디 관련 DTO
@@ -29,10 +29,11 @@ public class StudyDTO {
 	public StudyDTO() {
 		super();
 	}
-
+	
+	//Front 용 생성자
 	public StudyDTO(int studyId, String userEmail, String studyTitle, int studySize, int studyFee,
 			int studyCertification, int studyDiligenceCutline, Date studyPostDate, Date studyStartDate,
-			Date studyEndDate, int studyHomeworkPerWeek, int studyPaid, String studyContnet) {
+			Date studyEndDate, int studyHomeworkPerWeek, int studyPaid, String studyContent) {
 		super();
 		this.studyId = studyId;
 		this.userEmail = userEmail;
@@ -47,6 +48,32 @@ public class StudyDTO {
 		this.studyHomeworkPerWeek = studyHomeworkPerWeek;
 		this.studyPaid = studyPaid;
 		this.studyContent = studyContent;
+	}
+
+	//DB 용 생성자
+	public StudyDTO(int studyId, String userEmail, String studyTitle, int studySize, int studyFee,
+			int studyCertification, int studyDiligenceCutline, Date studyPostDate, Date studyStartDate,
+			Date studyEndDate, int studyHomeworkPerWeek, int studyPaid, Clob clob) {
+		super();
+		this.studyId = studyId;
+		this.userEmail = userEmail;
+		this.studyTitle = studyTitle;
+		this.studySize = studySize;
+		this.studyFee = studyFee;
+		this.studyCertification = studyCertification;
+		this.studyDiligenceCutline = studyDiligenceCutline;
+		this.studyPostDate = studyPostDate;
+		this.studyStartDate = studyStartDate;
+		this.studyEndDate = studyEndDate;
+		this.studyHomeworkPerWeek = studyHomeworkPerWeek;
+		this.studyPaid = studyPaid;
+		try {
+			setStudyContent(clob);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	
@@ -122,7 +149,7 @@ public class StudyDTO {
 	public void setStudyPaid(int studyPaid) {
 		this.studyPaid = studyPaid;
 	}
-	public String getStudyContnet() {
+	public String getStudyContent() {
 		return studyContent;
 	}
 	public void setStudyContent(Clob clob) throws IOException, SQLException {

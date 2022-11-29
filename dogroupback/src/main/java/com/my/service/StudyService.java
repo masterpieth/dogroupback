@@ -8,8 +8,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Date;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -19,18 +19,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
 import com.my.dto.StudyDTOBomi;
+import com.my.dto.UserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
+import com.my.exception.RemoveException;
 import com.my.repository.StudyRepository;
-import com.my.repository.StudyRepositoryOracle;
 
 public class StudyService {
 	private StudyRepository repository;
-	
-	public StudyService() {
-		repository = new StudyRepositoryOracle();
-		String propertiesFileName = "repository.properties";	//3차수정을 외부파일에서 한다
-		Properties env = new Properties();					
+	private UserService userService;
+		
+	public StudyService(String propertiesFileName) {
+		Properties env = new Properties();
 		try {
 			env.load(new FileInputStream(propertiesFileName));
 			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
@@ -40,6 +40,7 @@ public class StudyService {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}	//연결된 자원을 읽는다. key = value  
+
 		catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
@@ -56,11 +57,16 @@ public class StudyService {
 			e.printStackTrace();
 		}
 	}
-	
+	/**
+	 * 진행중인 스터디를 검색한다.
+	 * 
+	 * @param email 스터디ID
+	 * @return 스터디 목록
+	 * @throws FindException 진행중인 스터디를 찾지못하면 FindException발생한다.
+	 */
 	public List<StudyDTO> searchMyStudy(String email) throws FindException {
 		return repository.selectStudyByEmail(email);
 	}
-	
     public HomeworkDTO searchMyStudyUserInfo(String email, int studyId) throws FindException {
         return repository.selectUserHomeworkByEmail(email, studyId);
     }
@@ -70,8 +76,72 @@ public class StudyService {
 		return repository.selectStudy(studyId);
     	
     }
-    
-	
+	/**
+	 * 스터디를 개설한다. 돈이 없는 경우 개설에 실패한다.
+	 * @param study
+	 */
+	public void openStudy(StudyDTO study) throws AddException {
+		if(compareUserBalanceWithStudyFee(study.getStudyFee(), study.getUserEmail())) {
+			repository.insertStudy(study);
+		}
+		throw new AddException("스터디를 개설하는데 실패했습니다.");
+	}
+	/**
+	 * 스터디에 참여신청한다. 돈이 없는 경우 참여에 실패한다.
+	 * @param user
+	 * @param study
+	 * @throws AddException
+	 */
+	public void joinStudy(UserDTO user, StudyDTO study) throws AddException {
+		if(compareUserBalanceWithStudyFee(study.getStudyFee(), user.getEmail())) {
+			repository.insertStudyUser(study, user.getEmail());
+		}
+		throw new AddException("스터디 참여에 실패했습니다");
+	}
+	/**
+	 * 스터디 참여를 취소한다. 스터디 유저가 삭제되며 환불처리도 함께 진행된다.
+	 * @param study
+	 * @param email
+	 * @throws RemoveException
+	 */
+	public void leaveStudy(StudyDTO study, String email) throws RemoveException {
+		repository.deleteStudyUser(study, email);
+	}
+	/**
+	 * 사용자의 잔액과 입장료를 비교하여 입장을 할 수 있는지 없는지를 반환한다.
+	 * @return 스터디 입장료보다 잔액이 많으면 true / 스터디 입장료보다 잔액이 적어서 입장을 할 수 없으면 false
+	 */
+	private boolean compareUserBalanceWithStudyFee(int studyFee, String email) {
+		try {
+			userService = new UserService("repository.properties");
+			UserDTO user = userService.searchUserInfo(email);
+			int userBalance = user.getUserBalance();
+			if(userBalance > studyFee) {
+				return true;
+			}
+		} catch (FindException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	/**
+	 * 버튼형 출석 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
+	 * 
+	 * @param email
+	 * @param studyId
+	 * @throws AddException
+	 */
+	public void checkTodayHomework(String email, int studyId) throws AddException {
+		try {
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			Date todayUtilDate = (Date)formatter.parse(new Date().toString());
+			Date created_at = new Date(todayUtilDate.getTime());
+			repository.insertHomeworkByEmail(email, studyId, created_at);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AddException("시스템 오류가 발생했습니다");
+		}
+	}
 	/**
 	 * Github 과제를 체크한다.
 	 * @param email
@@ -80,7 +150,7 @@ public class StudyService {
 	 */
 	public void checkMyGithubCommit(String email, int studyId) throws AddException {
 		try {
-			java.util.Date date = getGithubEventsDate(email);
+			Date date = getGithubEventsDate(email);
 			Date created_at = new Date(date.getTime());
 			repository.insertHomeworkByEmail(email, studyId, created_at);
 		} catch (Exception e) {
@@ -94,7 +164,7 @@ public class StudyService {
 	 * @return 				//과제날짜
 	 * @throws Exception
 	 */
-	private java.util.Date getGithubEventsDate(String email) throws Exception {
+	private Date getGithubEventsDate(String email) throws Exception {
 		String[] emailArr = email.split("@");
 		String userId = emailArr[0];
 		String userUrl = "https://api.github.com/users/" + userId + "/events/public";
@@ -130,8 +200,8 @@ public class StudyService {
 					created_at = created_at.replace("T", " ");
 					created_at = created_at.replace("Z", "");
 					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-					java.util.Date eventUtilDate = formatter.parse(created_at);
-					java.util.Date todayUtilDate = formatter.parse(created_at);
+					Date eventUtilDate = (Date) formatter.parse(created_at);
+					Date todayUtilDate = (Date) formatter.parse(created_at);
 					
 					if(eventUtilDate.equals(todayUtilDate)) {
 						return eventUtilDate;
