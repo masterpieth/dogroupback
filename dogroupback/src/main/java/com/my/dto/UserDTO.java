@@ -13,12 +13,18 @@ public class UserDTO {
 	private int userBalance;		//User 지갑 현재 총 잔액
 	private int status;				//User 현재상태 1:활성회원 / 0:탈퇴회원
 	
-	public UserDTO(String email, String password , String name) {
+	public UserDTO() {
 		super();
-		this.email= email;
-		this.password= password;
+	}
+
+	public UserDTO(String email, String name, String password, int diligence, int userBalance, int status) {
+		super();
+		this.email = email;
 		this.name = name;
-		
+		this.password = password;
+		this.diligence = diligence;
+		this.userBalance = userBalance;
+		this.status = status;
 	}
 
 	public String getEmail() {
@@ -74,5 +80,4 @@ public class UserDTO {
 		return "UserDTO [email=" + email + ", name=" + name + ", password=" + password + ", diligence=" + diligence
 				+ ", userBalance=" + userBalance + ", status=" + status + "]";
 	}
-	
 }
