@@ -10,7 +10,7 @@ import com.my.exception.AddException;
 import com.my.exception.FindException;
 
 public interface StudyRepository {
-	
+
 	/**
 	 * 과제를 테이블에 추가한다. 오늘날짜의 과제가 없으면 AddException을 터뜨린다.
 	 * 
@@ -39,8 +39,13 @@ public interface StudyRepository {
 	 */
 	HomeworkDTO selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException;
 
+	/**
+	 * 스터디 상세페이지를 조회한다(회원용)
+	 * 
+	 * @param studyId
+	 * @return Study의 상세내용을 반환
+	 * @throws FindException 상세 조회중 오류시 발생
+	 */
 	StudyDTOBomi selectStudy(int studyId) throws FindException;
-  
-	
-}
 
+}

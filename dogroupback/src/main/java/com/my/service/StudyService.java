@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
+import com.my.dto.StudyDTOBomi;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.repository.StudyRepository;
@@ -63,6 +64,13 @@ public class StudyService {
     public HomeworkDTO searchMyStudyUserInfo(String email, int studyId) throws FindException {
         return repository.selectUserHomeworkByEmail(email, studyId);
     }
+    
+    
+    public StudyDTOBomi searchStudyInfo(int studyId)throws FindException{
+		return repository.selectStudy(studyId);
+    	
+    }
+    
 	
 	/**
 	 * Github 과제를 체크한다.

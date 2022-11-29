@@ -125,7 +125,7 @@ public class StudyDTO {
 	public String getStudyContnet() {
 		return studyContent;
 	}
-	public void setStudyContnet(Clob clob) throws IOException, SQLException {
+	public void setStudyContent(Clob clob) throws IOException, SQLException {
 		 this.studyContent = clobToStr(clob);
 	}
 	
