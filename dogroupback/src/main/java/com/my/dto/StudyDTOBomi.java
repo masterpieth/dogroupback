@@ -16,8 +16,7 @@ public class StudyDTOBomi extends StudyDTO{
 		super();
 	}
 
-	public StudyDTOBomi( List<StudySubjectDTOBomi> subjects,
-			UserDTO studyLeader, List<StudyUserDTO> studyUsers) {
+	public StudyDTOBomi( List<StudySubjectDTOBomi> subjects, UserDTO studyLeader, List<StudyUserDTO> studyUsers) {
 		super();
 		
 		this.subjects = subjects;
@@ -48,6 +47,10 @@ public class StudyDTOBomi extends StudyDTO{
 
 	public void setStudyUsers(List<StudyUserDTO> studyUsers) {
 		this.studyUsers = studyUsers;
+	}
+
+	public void setStudyUsers(int cnt) {
+		
 	}
 
 	
