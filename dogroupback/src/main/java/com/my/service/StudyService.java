@@ -16,31 +16,26 @@ import java.util.Properties;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.repository.StudyRepository;
-import com.my.repository.StudyRepositoryOracle;
 
 public class StudyService {
 	private StudyRepository repository;
-	
-	public StudyService() {
-		repository = new StudyRepositoryOracle();
-		String propertiesFileName = "repository.properties";	
-		Properties env = new Properties();					
-		try {
-//			env.load(new FileInputStream(propertiesFileName));
-//			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
-			Class<?> clazz = Class.forName("com.my.repository.StudyRepositoryOracle"); 		//객체생성 반환형이 object
-			Object obj = clazz.getDeclaredConstructor().newInstance();	
-			repository = (StudyRepository)obj;
-		}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}	//연결된 자원을 읽는다. key = value  
 
-		catch (ClassNotFoundException e) {
+	public StudyService(String propertiesFileName) {
+		Properties env = new Properties();
+		try {
+			env.load(new FileInputStream(propertiesFileName));
+			String className = env.getProperty("study");
+			Class clazz = Class.forName(className);
+			Object obj = clazz.getDeclaredConstructor().newInstance();
+			repository = (StudyRepository) obj;
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
 			e.printStackTrace();
@@ -56,9 +51,10 @@ public class StudyService {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * 진행중인 스터디를 검색한다.
+	 * 
 	 * @param email 스터디ID
 	 * @return 스터디 목록
 	 * @throws FindException 진행중인 스터디를 찾지못하면 FindException발생한다.
@@ -66,8 +62,10 @@ public class StudyService {
 	public List<StudyDTO> searchMyStudy(String email) throws FindException {
 		return repository.selectStudyByEmail(email);
 	}
+
 	/**
 	 * 버튼형 출석 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
+	 * 
 	 * @param email
 	 * @param studyId
 	 * @throws AddException
@@ -78,14 +76,15 @@ public class StudyService {
 			java.util.Date todayUtilDate = formatter.parse(formatter.format(new java.util.Date()));
 			Date created_at = new Date(todayUtilDate.getTime());
 			repository.insertHomeworkByEmail(email, studyId, created_at);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AddException("시스템 오류가 발생했습니다");
 		}
 	}
-	
+
 	/**
 	 * Github 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
+	 * 
 	 * @param email
 	 * @param studyId
 	 * @throws AddException
@@ -100,11 +99,12 @@ public class StudyService {
 			throw new AddException("시스템 오류가 발생했습니다");
 		}
 	}
-	
+
 	/**
 	 * GithubEvent를 읽어온다.
-	 * @param email			//User의 이메일 정보
-	 * @return 				//과제날짜
+	 * 
+	 * @param email //User의 이메일 정보
+	 * @return //과제날짜
 	 * @throws Exception
 	 */
 	private java.util.Date getGithubEventsDate(String email) throws Exception {
@@ -113,30 +113,32 @@ public class StudyService {
 		String userUrl = "https://api.github.com/users/" + userId + "/events/public";
 		URL url;
 		try {
-			//요청 연결
+			// 요청 연결
 			url = new URL(userUrl);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			
-			//정보 읽어오기
+
+			// 정보 읽어오기
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			StringBuilder sb = new StringBuilder();
 			String inputLine;
-			while((inputLine = bufferedReader.readLine()) != null) {
+			while ((inputLine = bufferedReader.readLine()) != null) {
 				sb.append(inputLine);
 			}
-			
-			//JSON 정보 파싱
+
+			// JSON 정보 파싱
 			ObjectMapper mapper = new ObjectMapper();
-			List<Map<String,Object>> map = mapper.readValue(sb.toString(), new TypeReference<List<Map<String,Object>>>(){});
+			List<Map<String, Object>> map = mapper.readValue(sb.toString(),
+					new TypeReference<List<Map<String, Object>>>() {
+					});
 			System.out.println();
 			int arrSize = map.size();
-			
-			//오늘 날짜의 PushEvent, PullRequestEvent 를 검색하고, 없는 경우 AddException을 터뜨린다.
-			for(int i=0; i<arrSize; i++) {
+
+			// 오늘 날짜의 PushEvent, PullRequestEvent 를 검색하고, 없는 경우 AddException을 터뜨린다.
+			for (int i = 0; i < arrSize; i++) {
 				Map<String, Object> object = map.get(i);
 				String type = (String) object.get("type");
-				
-				switch(type) {
+
+				switch (type) {
 				case "PushEvent":
 				case "PullRequestEvent":
 					String created_at = (String) object.get("created_at");
@@ -145,8 +147,8 @@ public class StudyService {
 					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 					java.util.Date eventUtilDate = formatter.parse(created_at);
 					java.util.Date todayUtilDate = formatter.parse(formatter.format(new java.util.Date()));
-					
-					if(eventUtilDate.equals(todayUtilDate)) {
+
+					if (eventUtilDate.equals(todayUtilDate)) {
 						return eventUtilDate;
 					}
 				}
@@ -157,7 +159,11 @@ public class StudyService {
 			throw new AddException(e.getMessage());
 		} catch (IOException e) {
 			e.printStackTrace();
-			throw new AddException(e.getMessage()); 
+			throw new AddException(e.getMessage());
 		}
+	}
+
+	public HomeworkDTO searchMyStudyUserInfo(String email, int studyId) throws FindException {
+		return repository.selectUserHomeworkByEmail(email, studyId);
 	}
 }
