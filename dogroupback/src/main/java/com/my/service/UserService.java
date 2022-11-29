@@ -69,12 +69,14 @@ public class UserService {
 	 * @throws FindException 회원을 찾지못하면 FindException 발생한다.
 	 */
 	public UserDTO searchUserInfo(String email) throws FindException {
+
 		try {
 			return repository.selectUserByEmail(email);
-		} catch (FindException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw new FindException(e.getMessage());
 		}
+
 	}
 
 }
