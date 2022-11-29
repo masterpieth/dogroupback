@@ -3,13 +3,13 @@ package com.my.repository;
 import java.sql.Date;
 import java.util.List;
 
-import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
 import com.my.dto.StudyDTOBomi;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 
 public interface StudyRepository {
+	
 	/**
 	 * 과제를 테이블에 추가한다. 오늘날짜의 과제가 없으면 AddException을 터뜨린다.
 	 * 
@@ -36,14 +36,17 @@ public interface StudyRepository {
 	 * @return 스터디원의 과제 리스트
 	 * @throws FindException 상세 조회중 오류시 발생
 	 */
-
+   HomeworkDTO selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException;
+	 
+   /**
+   * @param email 스터디 id
+	 * @return 진행중인 스터디를 검색한다.
+	 * @throws FindException
+	 */
+	List<StudyDTO> selectStudyByEmail(String email) throws FindException;
 
 	StudyDTOBomi selectStudy(int studyId) throws FindException;
-
+  
 	
-	
-	
-	
-	HomeworkDTO selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException;
-
 }
+

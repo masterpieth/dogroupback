@@ -1,10 +1,5 @@
 package com.my.dto;
 
-/**
- * Study 상세 DTO
- * @author NYK
- *
- */
 public class StudySubjectDTOBomi {
 	private int studyId;
 	private SubjectDTOBomi subject;
