@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.my.dto.StudyDTO;
+import com.my.dto.StudyDTOBomi;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.sql.MyConnection;
@@ -79,6 +80,28 @@ public class StudyRepositoryOracle implements StudyRepository {
 			e.printStackTrace();
 			throw new AddException("HomeWork Insert 실패");
 		}
+	}
+	@Override
+	public StudyDTOBomi selectStudy(int studyId) throws FindException {
+		
+		try {
+			conn = MyConnection.getConnection();
+			String selectStudySQL = "SELECT st.*, --스터디\r\n"
+					+ "       ss.subject_code, --스터디과목 코드 \r\n"
+					+ "       s.subject_name, --스터디 과목명\r\n"
+					+ "       (SELECT COUNT(*) FROM study_users WHERE study_id=st.study_id) cnt, --스터디 참여자수 \r\n"
+					+ "       (SELECT user_diligence FROM users WHERE user_email = st.user_email) diligence --스터디장 성실도\r\n"
+					+ "		  FROM STUDY st JOIN study_subject ss ON st.study_id = ss.study_id\r\n"
+					+ "             JOIN subject s ON  ss.subject_code = s.subject_code             \r\n"
+					+ "		 WHERE st.study_id=71;";
+			preStmt = conn.prepareStatement(selectStudySQL);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+		return null;
 	}
 }
 

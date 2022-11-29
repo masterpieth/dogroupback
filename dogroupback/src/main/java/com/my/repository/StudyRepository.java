@@ -4,6 +4,7 @@ import java.sql.Date;
 import java.util.List;
 
 import com.my.dto.StudyDTO;
+import com.my.dto.StudyDTOBomi;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 
@@ -23,7 +24,14 @@ public interface StudyRepository {
 	 * @throws AddException		//데이터를 넣을 수 없을 때 발생하는 예외
 	 */
 	void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException;
+	
+	
+	
+	
+	StudyDTOBomi selectStudy(int studyId)throws FindException;
+	
 }
+
 
 
 
