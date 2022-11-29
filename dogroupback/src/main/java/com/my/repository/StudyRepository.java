@@ -11,27 +11,42 @@ import com.my.exception.FindException;
 public interface StudyRepository {
 	
 	/**
-	 * @param email 스터디 id
+	 * 과제를 테이블에 추가한다. 오늘날짜의 과제가 없으면 AddException을 터뜨린다.
+	 * 
+	 * @param email      회원Email
+	 * @param studyId    스터디Id
+	 * @param created_at 이벤트생성일자
+	 * @throws AddException 데이터를 넣을 수 없을 때 발생하는 예외
+	 */
+	void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException;
+
+	/**
+	 * 진행중인 스터디를 검색한다.
+	 * 
+	 * @param email 회원 Email
+	 * @return 스터디 검색 결과 리스트
+	 * @throws FindException
+	 */
+	List<StudyDTO> selectStudyByEmail(String email) throws FindException;
+
+	/**
+	 * 선택한 스터디원의 email로 스터디원 상세 조회
+	 * 
+	 * @param email
+	 * @return 스터디원의 과제 리스트
+	 * @throws FindException 상세 조회중 오류시 발생
+	 */
+   HomeworkDTO selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException;
+	 
+   /**
+   * @param email 스터디 id
 	 * @return 진행중인 스터디를 검색한다.
 	 * @throws FindException
 	 */
 	List<StudyDTO> selectStudyByEmail(String email) throws FindException;
-	/**
-	 * 과제를 테이블에 추가한다. 오늘날짜의 과제가 없으면 AddException을 터뜨린다.
-	 * @param email				//회원Email
-	 * @param studyId			//스터디Id
-	 * @param created_at 		//이벤트생성일자
-	 * @throws AddException		//데이터를 넣을 수 없을 때 발생하는 예외
-	 */
-	void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException;
-	
-	
-	
-	
-	StudyDTOBomi selectStudy(int studyId)throws FindException;
+
+	StudyDTOBomi selectStudy(int studyId) throws FindException;
+  
 	
 }
-
-
-
 
