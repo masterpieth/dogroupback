@@ -152,6 +152,10 @@ public class StudyDTO {
 	public String getStudyContent() {
 		return studyContent;
 	}
+	
+	public void setStudyContent(String studyContent) {
+		this.studyContent = studyContent;
+	}
 	public void setStudyContent(Clob clob) throws IOException, SQLException {
 		 this.studyContent = clobToStr(clob);
 	}
