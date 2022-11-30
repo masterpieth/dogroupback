@@ -1,5 +1,6 @@
 package com.my.repository;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -12,14 +13,14 @@ import com.my.exception.FindException;
 import com.my.sql.MyConnection;
 
 public class WalletRepositoryOracle implements WalletRepository {
-	private Connection conn = null;
-	private PreparedStatement preStmt = null;
-	private ResultSet rs = null;
 	/**
 	 * 사용자의 지갑 목록을 반환한다.
 	 */
 	@Override
 	public List<WalletDTO> selectWallet(String email) throws FindException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		List<WalletDTO> list = new ArrayList<>();
 		try {
 			conn = MyConnection.getConnection();

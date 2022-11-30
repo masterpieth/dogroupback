@@ -24,15 +24,13 @@ import com.my.exception.RemoveException;
 import com.my.sql.MyConnection;
 
 public class StudyRepositoryOracle implements StudyRepository {
-	private Connection conn = null;
-	private PreparedStatement preStmt = null;
-	private CallableStatement calStmt = null;
-	private ResultSet rs = null;
-
+	
 	@Override
 	public List<StudyDTO> selectStudyByEmail(String email) throws FindException {
 		List<StudyDTO> list = new ArrayList<>();
-
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			String selectStudyByEmailSQL = "SELECT * FROM study WHERE user_email= ? ";
@@ -78,6 +76,9 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			String insertHomeworkByEmailSQL = "INSERT INTO HOMEWORK VALUES(?, ?, ?)";
@@ -101,6 +102,9 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public List<HomeworkDTO> selectHomeworkByStudyId(int studyId) throws FindException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		List<HomeworkDTO> homeworkList = new ArrayList<>();
 		String homeworListSQL = "select * from homework where " + "study_id = ? order by user_email, study_submit_dt";
 		try {
@@ -132,7 +136,9 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public StudyDTOBomi selectStudy(int studyId) throws FindException {
-
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			// ------- 스터디 기본 정보, 스터디원 인원수, 스터디장의 성실도, 스터디의 과목 목록 SEARCH START -------
@@ -193,14 +199,14 @@ public class StudyRepositoryOracle implements StudyRepository {
 				List<StudyUserDTO> studyUserList = new ArrayList<>();
 				StudyUserDTO user;
 				while (rs.next()) {
-					user = new StudyUserDTO(studyId, selectUserHomeworkByEmail(rs.getString("user_email"), studyId),
-							null);
+					user = new StudyUserDTO(studyId, null, null);
 					user.setDiligence(rs.getInt("user_diligence"));
 					user.setEmail(rs.getString("user_email"));
 					user.setName(rs.getString("user_name"));
 					user.setPassword(rs.getString("user_password"));
-					user.setStatus(rs.getInt("user_stauts"));
+					user.setStatus(rs.getInt("user_status"));
 					user.setUserBalance(rs.getInt("user_balance"));
+					user.setHomeworkList(selectUserHomeworkByEmail(rs.getString("user_email"), studyId)); 
 					studyUserList.add(user);
 				}
 				study.setStudyUsers(studyUserList);
@@ -212,9 +218,11 @@ public class StudyRepositoryOracle implements StudyRepository {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new FindException(e.getMessage());
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
 		}
 	}
-
+	
 	
 	/**
 	 * 스터디 정보를 반환한다.
@@ -225,6 +233,9 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public StudyDTO selectStudyByStudyId(int studyId) throws FindException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			String selectStudyByEmailSQL = "SELECT * FROM study WHERE study_id= ?";
@@ -275,6 +286,9 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public List<HomeworkDTO> selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		List<HomeworkDTO> homeworkList = new ArrayList<>();
 		HomeworkDTO homework;
 		String homeworListSQL = "select * from homework where study_id = ? and user_email = ?";
@@ -301,12 +315,15 @@ public class StudyRepositoryOracle implements StudyRepository {
 			MyConnection.close(rs, preStmt, conn);
 		}
 	}
-
+	
 	/**
 	 * 스터디를 Insert 한다. Study와 StudyUser(스터디장)가 한 트랜잭션에 insert되고, 실패시 롤백한다.
 	 */
 	@Override
 	public void insertStudy(StudyDTO study) {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			conn.setAutoCommit(false);
@@ -329,7 +346,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 			clob.setString(1, study.getStudyContent());
 			preStmt.setClob(10, clob);
 			preStmt.executeUpdate();
-
+			
 			preStmt = conn.prepareStatement(insertedSeqSQL);
 			rs = preStmt.executeQuery();
 			if (rs.next()) {
@@ -357,6 +374,9 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public void insertStudyUserLeader(StudyDTO study, String email, Connection conn) throws AddException {
+		PreparedStatement preStmt = null;
+		CallableStatement calStmt = null;
+		ResultSet rs = null;
 		try {
 			// 지갑 관련 프로시저
 			String procSQL = "{ call proc_wallet(?, ?, ?, ?, ?, ?) }";
@@ -382,14 +402,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 				e1.printStackTrace();
 			}
 		} finally {
-			MyConnection.close(rs, preStmt, conn);
-			if (calStmt != null) {
-				try {
-					calStmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
+			MyConnection.close(rs, calStmt, null);
 		}
 	}
 
@@ -399,6 +412,10 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public void insertStudyUser(StudyDTO study, String email) throws AddException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		CallableStatement calStmt = null;
+		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			conn.setAutoCommit(false);
@@ -412,11 +429,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 			calStmt.setInt(5, 2);
 			calStmt.setInt(6, study.getStudyFee());
 			calStmt.executeUpdate();
-			// 유저 insert
-			String insertStudyUserSQL = "INSERT INTO STUDY_USERS VALUES(?, ?)";
-			preStmt = conn.prepareStatement(insertStudyUserSQL);
-			preStmt.setInt(1, study.getStudyId());
-			preStmt.setString(2, email);
 			conn.commit();
 		} catch (Exception e) {
 			try {
@@ -442,6 +454,10 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public void deleteStudyUser(StudyDTO study, String email) throws RemoveException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		CallableStatement calStmt = null;
+		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			conn.setAutoCommit(false);
@@ -455,11 +471,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 			calStmt.setInt(5, 5);
 			calStmt.setInt(6, study.getStudyFee());
 			calStmt.executeUpdate();
-			// 스터디 유저를 삭제한다.
-			String deleteStudyUserSQL = "DELETE FROM study_users WHERE study_id = ? AND user_email = ?";
-			preStmt = conn.prepareStatement(deleteStudyUserSQL);
-			preStmt.setInt(1, study.getStudyId());
-			preStmt.setString(2, email);
 			conn.commit();
 		} catch (Exception e) {
 			try {
