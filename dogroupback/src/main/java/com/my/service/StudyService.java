@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -24,11 +24,16 @@ import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.exception.RemoveException;
 import com.my.repository.StudyRepository;
+import com.my.repository.StudyRepositoryOracle;
 
 public class StudyService {
 	private StudyRepository repository;
 	private UserService userService;
-		
+	
+	public StudyService() {
+		repository = new StudyRepositoryOracle();
+	}
+	
 	public StudyService(String propertiesFileName) {
 		Properties env = new Properties();
 		try {
@@ -160,37 +165,36 @@ public class StudyService {
 	}
 	/**
 	 * GithubEvent를 읽어온다.
-	 * @param email			//User의 이메일 정보
-	 * @return 				//과제날짜
+	 * @param email			User의 이메일 정보
+	 * @return Date			과제날짜
 	 * @throws Exception
 	 */
-	private Date getGithubEventsDate(String email) throws Exception {
+	private Date getGithubEventsDate(String email) throws FindException {
 		String[] emailArr = email.split("@");
 		String userId = emailArr[0];
-		String userUrl = "https://api.github.com/users/" + userId + "/events/public";
-		URL url;
+		//username을 받아오기 위한 searchuser url
+		String searchUserUrl = "https://api.github.com/search/users?q=" + userId;
 		try {
-			//요청 연결
-			url = new URL(userUrl);
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			
-			//정보 읽어오기
-			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			StringBuilder sb = new StringBuilder();
-			String inputLine;
-			while((inputLine = bufferedReader.readLine()) != null) {
-				sb.append(inputLine);
-			}
-			
+			//username이 담겨있는 json data를 받아온다
+			String searchUserResult = getGithubJsonDataToString(searchUserUrl);
 			//JSON 정보 파싱
 			ObjectMapper mapper = new ObjectMapper();
-			List<Map<String,Object>> map = mapper.readValue(sb.toString(), new TypeReference<List<Map<String,Object>>>(){});
-			System.out.println();
-			int arrSize = map.size();
+			Map<String,Object> searchUsermap = mapper.readValue(searchUserResult, new TypeReference<Map<String,Object>>(){});
+			//username이 담겨있는 list
+			List<Object> items = (List) searchUsermap.get("items");
+			//username
+			HashMap<String, Object> loginInfo = (HashMap<String, Object>) items.get(0);
+			String username = (String) loginInfo.get("login");
 			
+			//username을 가지고 event를 받아오기 위한 url
+			String userEventUrl = "https://api.github.com/users/" + username + "/events/public";
+			//username의 event가 담겨있는 json data를 받아온다.
+			String userEventResult = getGithubJsonDataToString(userEventUrl);
+			List<Map<String,Object>> userEventmapList = mapper.readValue(userEventResult, new TypeReference<List<Map<String,Object>>>(){});
+			int arrSize = userEventmapList.size();
 			//오늘 날짜의 PushEvent, PullRequestEvent 를 검색하고, 없는 경우 AddException을 터뜨린다.
 			for(int i=0; i<arrSize; i++) {
-				Map<String, Object> object = map.get(i);
+				Map<String, Object> object = userEventmapList.get(i);
 				String type = (String) object.get("type");
 				
 				switch(type) {
@@ -208,13 +212,36 @@ public class StudyService {
 					}
 				}
 			}
-			throw new AddException("이벤트를 찾을 수 없습니다.");
-		} catch (MalformedURLException e) {
+			throw new FindException("이벤트를 찾을 수 없습니다.");
+		} catch(Exception e) {
 			e.printStackTrace();
-			throw new AddException(e.getMessage());
-		} catch (IOException e) {
+			throw new FindException("시스템 오류가 발생했습니다.");
+		}
+	}
+	/**
+	 * github Api 에 요청을 보내서 결과로 받아온 Json을 String 형태로 반환한다.
+	 * @param url			요청을 보낼 주소
+	 * @return api			결과값 String
+	 * @throws FindException 
+	 */
+	private String getGithubJsonDataToString(String callUrl) throws FindException {
+		URL url;
+		try {
+			//요청 연결
+			url = new URL(callUrl);
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			
+			//정보 읽어오기
+			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			StringBuilder sb = new StringBuilder();
+			String inputLine;
+			while((inputLine = bufferedReader.readLine()) != null) {
+				sb.append(inputLine);
+			}
+			return sb.toString();
+		} catch (Exception e) {
 			e.printStackTrace();
-			throw new AddException(e.getMessage()); 
+			throw new FindException("시스템 오류가 발생했습니다.");
 		}
 	}
 }
