@@ -62,7 +62,6 @@ public class StudyService {
 			e.printStackTrace();
 		}
 	}
-
 	/**
 	 * 스터디의 모든 정보를 반환한다.
 	 * 
@@ -161,7 +160,7 @@ public class StudyService {
 	 * 사용자의 성실도와 스터디의 성실도 커트라인을 비교하여 입장을 할 수 있는지 없는지를 반환한다.
 	 * @return 스터디의 성실도 커트라인보다 사용자의 성실도가 높으면 true / 낮으면 false를 반환한다.
 	 */
-	private boolean compareUserDiligenceWithStudyDiligenceCutline(int studyDiligenceCutline, String email){
+	private boolean compareUserDiligenceWithStudyDiligenceCutline(int studyDiligenceCutline, String email) {
 		try {
 			userService = new UserService("repository.properties");
 			UserDTO user = userService.searchUserInfo(email);
@@ -174,7 +173,6 @@ public class StudyService {
 		}
 		return false;
 	}
-	
 	/**
 	 * 버튼형 출석 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
 	 * 
