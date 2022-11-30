@@ -92,13 +92,14 @@ public class StudyService {
 		throw new AddException("스터디를 개설하는데 실패했습니다.");
 	}
 	/**
-	 * 스터디에 참여신청한다. 돈이 없는 경우 참여에 실패한다.
+	 * 스터디에 참여신청한다. 돈이 없는 경우 또는 성실도가 커트라인보다 낮은 경우 참여에 실패한다.
 	 * @param user
 	 * @param study
 	 * @throws AddException
 	 */
 	public void joinStudy(UserDTO user, StudyDTO study) throws AddException {
-		if(compareUserBalanceWithStudyFee(study.getStudyFee(), user.getEmail())) {
+		if(compareUserBalanceWithStudyFee(study.getStudyFee(), user.getEmail())
+				&& compareUserDiligenceWithStudyDiligenceCutline(study.getStudyDiligenceCutline(), user.getEmail())) {
 			repository.insertStudyUser(study, user.getEmail());
 		}
 		throw new AddException("스터디 참여에 실패했습니다");
@@ -122,6 +123,23 @@ public class StudyService {
 			UserDTO user = userService.searchUserInfo(email);
 			int userBalance = user.getUserBalance();
 			if(userBalance > studyFee) {
+				return true;
+			}
+		} catch (FindException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	/**
+	 * 사용자의 성실도와 스터디의 성실도 커트라인을 비교하여 입장을 할 수 있는지 없는지를 반환한다.
+	 * @return 스터디의 성실도 커트라인보다 사용자의 성실도가 높으면 true / 낮으면 false를 반환한다.
+	 */
+	private boolean compareUserDiligenceWithStudyDiligenceCutline(int studyDiligenceCutline, String email) {
+		try {
+			userService = new UserService("repository.properties");
+			UserDTO user = userService.searchUserInfo(email);
+			int userDiligence = user.getDiligence();
+			if(studyDiligenceCutline < userDiligence) {
 				return true;
 			}
 		} catch (FindException e) {
