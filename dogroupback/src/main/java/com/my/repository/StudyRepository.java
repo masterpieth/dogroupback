@@ -112,14 +112,12 @@ public interface StudyRepository {
 
 	/**
 	 * 스터디 과목을 insert 한다
-	 * 
-	 * @param study    스터디 정보
-	 * @param subjects 스터디과목들
-	 * @param conn     insertStudy시의 connection
-	 * @throws AddException 실패시 발생시킬 예외
+	 * @param study				스터디 정보
+	 * @param subjects			스터디과목들
+	 * @param conn				insertStudy시의 connection
+	 * @throws AddException		실패시 발생시킬 예외
 	 */
-	void insertStudySubject(StudyDTOBomi study, List<StudySubjectDTOBomi> subjects, Connection conn)
-			throws AddException;
+	void insertStudySubject(StudyDTOBomi study, List<StudySubjectDTOBomi> subjects, Connection conn) throws AddException;
 
 	/**
 	 * 조건에 맞는 스터디 개수를 카운트하여 반환한다. (조건 : 타이틀명, 스터디 정원)

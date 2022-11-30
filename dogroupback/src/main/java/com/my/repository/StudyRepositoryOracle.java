@@ -391,11 +391,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 			calStmt.setInt(5, 2);
 			calStmt.setInt(6, study.getStudyFee());
 			calStmt.executeUpdate();
-			// 유저 insert
-			String insertStudyUserSQL = "INSERT INTO STUDY_USERS VALUES(?, ?)";
-			preStmt = conn.prepareStatement(insertStudyUserSQL);
-			preStmt.setInt(1, study.getStudyId());
-			preStmt.setString(2, email);
 			conn.commit();
 		} catch (Exception e) {
 			try {
@@ -540,7 +535,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 			MyConnection.close(rs, preStmt, null);
 		}
 	}
-
+	
 	/**
 	 * 검색 조건에 맞는 스터디 개수를 카운트하여 반환한다. (조건 : 타이틀명, 스터디 정원)
 	 */
@@ -580,8 +575,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 * 검색 조건에 맞는 스터디 리스트를 반환한다. (조건 : 현재 페이지, 페이지당 개수, 타이틀명, 스터디 정원)
 	 */
 	@Override
-	public List<StudyDTO> selectStudy(int currentPage, int cntPerPage, String studyTitle, int studySize)
-			throws FindException {
+	public List<StudyDTO> selectStudy(int currentPage, int cntPerPage, String studyTitle, int studySize) throws FindException {
 		Connection conn = null;
 		PreparedStatement preStmt = null;
 		ResultSet rs = null;
@@ -636,5 +630,4 @@ public class StudyRepositoryOracle implements StudyRepository {
 			MyConnection.close(rs, preStmt, conn);
 		}
 	}
-
 }
