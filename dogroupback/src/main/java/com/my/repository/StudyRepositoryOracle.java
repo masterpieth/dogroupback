@@ -1,11 +1,13 @@
 package com.my.repository;
 
+import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
 
 import com.my.dto.HomeworkDTO;
@@ -17,11 +19,13 @@ import com.my.dto.UserDTO;
 import com.my.dto.StudyUserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
+import com.my.exception.RemoveException;
 import com.my.sql.MyConnection;
 
 public class StudyRepositoryOracle implements StudyRepository {
 	private Connection conn = null;
 	private PreparedStatement preStmt = null;
+	private CallableStatement calStmt = null;
 	private ResultSet rs = null;
 
 	@Override
@@ -69,7 +73,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 	}
 
 	/**
-	 * 
+	 * 스터디회원의 과제를 insert한다
 	 */
 	@Override
 	public void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException {
@@ -77,17 +81,18 @@ public class StudyRepositoryOracle implements StudyRepository {
 			conn = MyConnection.getConnection();
 			String insertHomeworkByEmailSQL = "INSERT INTO HOMEWORK VALUES(?, ?, ?)";
 			preStmt = conn.prepareStatement(insertHomeworkByEmailSQL);
-			preStmt.setDate(1, created_at);
+			preStmt.setDate(1, new java.sql.Date(created_at.getTime()));
 			preStmt.setInt(2, studyId);
-			preStmt.setString(3, "user1@gmail.com");
+			preStmt.setString(3, email);
 			preStmt.executeUpdate();
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AddException("HomeWork Insert 실패");
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
 		}
 	}
-	
 	/**
 	 * 스터디의 모든 과제 제출 내역을 리스트로 반환한다.
 	 */
@@ -202,7 +207,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 			throw new FindException(e.getMessage());
 		}
 	}
-	
 	/**
 	 * 스터디 정보를 반환한다.
 	 * @param studyId
@@ -280,12 +284,199 @@ public class StudyRepositoryOracle implements StudyRepository {
 				System.out.println(h);
 			}
 			return homeworkList;
+  }
+	/**
+	 * 스터디를 Insert 한다. Study와 StudyUser(스터디장)가 한 트랜잭션에 insert되고, 실패시 롤백한다.
+	 */
+	@Override
+	public void  insertStudy(StudyDTO study) {
+		try {
+			conn = MyConnection.getConnection();
+			conn.setAutoCommit(false);
+			String insertStudySQL = "INSERT INTO STUDY VALUES(study_seq.nextval, ?, ?, ?, ?, ?, ?, sysdate, ?, ?, ?, 0, ?)";
+			String insertedSeqSQL = "SELECT study_seq.currval as CURVAL FROM dual";
+			
+			preStmt = conn.prepareStatement(insertStudySQL);
+			//기본값 세팅
+			preStmt.setString(1, study.getUserEmail());
+			preStmt.setString(2, study.getStudyTitle());
+			preStmt.setInt(3, study.getStudySize());
+			preStmt.setInt(4, study.getStudyFee());
+			preStmt.setInt(5, study.getStudyCertification());
+			preStmt.setInt(6, study.getStudyDiligenceCutline());
+			preStmt.setDate(7, new java.sql.Date(study.getStudyStartDate().getTime()));
+			preStmt.setDate(8, new java.sql.Date(study.getStudyEndDate().getTime()));
+			preStmt.setInt(9, study.getStudyHomeworkPerWeek());
+			//content Clob 세팅
+			Clob clob = conn.createClob();
+			clob.setString(1, study.getStudyContent());
+			preStmt.setClob(10, clob);
+			preStmt.executeUpdate();
+			
+			preStmt = conn.prepareStatement(insertedSeqSQL);
+			rs = preStmt.executeQuery();
+			if(rs.next()) {
+				study.setStudyId(rs.getInt("CURVAL"));
+			}
+			//스터디장 insert
+			insertStudyUserLeader(study, study.getUserEmail(), conn);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new FindException(e.getMessage());
 		} finally {
 			MyConnection.close(rs, preStmt, conn);
 		}
 	}
+	/**
+	 * 스터디장을 insert 한다 - insertStudy에서 connection을 받아서 한 트랜잭션에 있도록 한다.
+	 * 
+	 */
+	@Override
+	public void insertStudyUserLeader(StudyDTO study, String email, Connection conn) throws AddException {
+		try {
+			//지갑 관련 프로시저
+			String procSQL = "{ call proc_wallet(?, ?, ?, ?, ?, ?) }";
+			calStmt = conn.prepareCall(procSQL);
+			calStmt.setInt(1, 1);
+			calStmt.setString(2, email);
+			calStmt.setInt(3, study.getStudyId());
+			calStmt.setString(4, null);
+			calStmt.setInt(5, 2);
+			calStmt.setInt(6, study.getStudyFee());
+			calStmt.executeUpdate();
+			//유저 insert
+			String insertStudyUserSQL = "INSERT INTO STUDY_USERS VALUES(?, ?)";
+			preStmt = conn.prepareStatement(insertStudyUserSQL);
+			preStmt.setInt(1, study.getStudyId());
+			preStmt.setString(2, email);
+			conn.commit();
+		} catch (Exception e) {
+			try {
+				e.printStackTrace();
+				conn.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+			if(calStmt != null) {
+				try {
+					calStmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	/**
+	 * 스터디원을 Insert 한다 - 지갑 관련 추가-삭제 등을 담당하는 프로시저를 호출한다.
+	 * flag 1: 스터디원 추가
+	 * flag 0: 스터디원 삭제
+	 */
+	@Override
+	public void insertStudyUser(StudyDTO study, String email) throws AddException {
+		try {
+			conn = MyConnection.getConnection();
+			conn.setAutoCommit(false);
+			//지갑 관련 프로시저
+			String procSQL = "{ call proc_wallet(?, ?, ?, ?, ?, ?) }";
+			calStmt = conn.prepareCall(procSQL);
+			calStmt.setInt(1, 1);
+			calStmt.setString(2, email);
+			calStmt.setInt(3, study.getStudyId());
+			calStmt.setString(4, null);
+			calStmt.setInt(5, 2);
+			calStmt.setInt(6, study.getStudyFee());
+			calStmt.executeUpdate();
+			//유저 insert
+			String insertStudyUserSQL = "INSERT INTO STUDY_USERS VALUES(?, ?)";
+			preStmt = conn.prepareStatement(insertStudyUserSQL);
+			preStmt.setInt(1, study.getStudyId());
+			preStmt.setString(2, email);
+			conn.commit();
+		} catch (Exception e) {
+			try {
+				e.printStackTrace();
+				conn.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+			if(calStmt != null) {
+				try {
+					calStmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	@Override
+	public HomeworkDTO selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException {
+	    List<Date> homeworkList = new ArrayList<Date>();
+	    String homeworListSQL = "select * from homework where "    
+	                            + "study_id = ? and user_email = ? "
+	                            + "and study_submit_dt >= (select study_start_date from study where study_id = ?)";
+	    try {
+	        conn = MyConnection.getConnection();
+	        preStmt = conn.prepareStatement(homeworListSQL);
+	        preStmt.setInt(1, studyId);
+	        preStmt.setString(2, userEmail);
+	        preStmt.setInt(3, studyId);
+	        rs = preStmt.executeQuery(); //선택한 유저의 스터디 시작일 이후의 제출 과제 내역을 모두 가져온다.
 	
+	        while (rs.next()) {
+	            Date studySubmitDt = rs.getDate("study_submit_dt");
+	            homeworkList.add(studySubmitDt);
+	        }
+	        return new HomeworkDTO(homeworkList, studyId, userEmail);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        throw new FindException(e.getMessage());
+	    } finally {
+	        MyConnection.close(rs, preStmt, conn);
+	    }
+	}
+	/**
+	 * 스터디에서 탈퇴한다 - StudyUser 테이블에서 정보를 제거한다.
+	 */
+	@Override
+	public void deleteStudyUser(StudyDTO study, String email) throws RemoveException {
+		try {
+			conn = MyConnection.getConnection();
+			conn.setAutoCommit(false);
+			//지갑 관련 프로시저
+			String procSQL = "{ call proc_wallet(?, ?, ?, ?, ?, ?) }";
+			calStmt = conn.prepareCall(procSQL);
+			calStmt.setInt(1, 0);
+			calStmt.setString(2, email);
+			calStmt.setInt(3, study.getStudyId());
+			calStmt.setString(4, null);
+			calStmt.setInt(5, 5);
+			calStmt.setInt(6, study.getStudyFee());
+			calStmt.executeUpdate();
+			//스터디 유저를 삭제한다.
+			String deleteStudyUserSQL = "DELETE FROM study_users WHERE study_id = ? AND user_email = ?";
+			preStmt = conn.prepareStatement(deleteStudyUserSQL);
+			preStmt.setInt(1, study.getStudyId());
+			preStmt.setString(2, email);
+			conn.commit();
+		} catch (Exception e) {
+			try {
+				e.printStackTrace();
+				conn.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+			if(calStmt != null) {
+				try {
+					calStmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 }
