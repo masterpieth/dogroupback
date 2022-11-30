@@ -1,7 +1,10 @@
 package com.my.service;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -10,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -23,7 +27,6 @@ import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.exception.RemoveException;
 import com.my.repository.StudyRepository;
-import com.my.repository.StudyRepositoryOracle;
 
 public class StudyService {
 	private StudyRepository repository;
@@ -32,36 +35,33 @@ public class StudyService {
 	/**
 	 * 서비스 생성자
 	 */
-	public StudyService() {
-		repository = new StudyRepositoryOracle();
-//		String propertiesFileName = "repository.properties";	//3차수정을 외부파일에서 한다
-//		Properties env = new Properties();					
-//		try {
-//			env.load(new FileInputStream(propertiesFileName));
-//			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
-//			Class<?> clazz = Class.forName(className); 		//객체생성 반환형이 object
-//			Object obj = clazz.getDeclaredConstructor().newInstance();	
-//			repository = (StudyRepository)obj;
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}	//연결된 자원을 읽는다. key = value  
-//		catch (ClassNotFoundException e) {
-//			e.printStackTrace();
-//		} catch (InstantiationException e) {
-//			e.printStackTrace();
-//		} catch (IllegalAccessException e) {
-//			e.printStackTrace();
-//		} catch (IllegalArgumentException e) {
-//			e.printStackTrace();
-//		} catch (InvocationTargetException e) {
-//			e.printStackTrace();
-//		} catch (NoSuchMethodException e) {
-//			e.printStackTrace();
-//		} catch (SecurityException e) {
-//			e.printStackTrace();
-//		}
+	public StudyService(String propertiesFileName) {
+		Properties env = new Properties();
+		try {
+			env.load(new FileInputStream(propertiesFileName));
+			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
+			Class<?> clazz = Class.forName(className); 		//객체생성 반환형이 object
+			Object obj = clazz.getDeclaredConstructor().newInstance();	
+			repository = (StudyRepository)obj;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	//연결된 자원을 읽는다. key = value  
+		catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		}
 	}
-
 	/**
 	 * 스터디의 모든 정보를 반환한다.
 	 * 
@@ -114,7 +114,6 @@ public class StudyService {
 
 	/**
 	 * 스터디에 참여신청한다. 돈이 없는 경우 또는 성실도가 커트라인보다 낮은 경우 참여에 실패한다.
-	 * 
 	 * @param user
 	 * @param study
 	 * @throws AddException
@@ -159,7 +158,6 @@ public class StudyService {
 
 	/**
 	 * 사용자의 성실도와 스터디의 성실도 커트라인을 비교하여 입장을 할 수 있는지 없는지를 반환한다.
-	 * 
 	 * @return 스터디의 성실도 커트라인보다 사용자의 성실도가 높으면 true / 낮으면 false를 반환한다.
 	 */
 	private boolean compareUserDiligenceWithStudyDiligenceCutline(int studyDiligenceCutline, String email) {
@@ -175,7 +173,6 @@ public class StudyService {
 		}
 		return false;
 	}
-
 	/**
 	 * 버튼형 출석 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
 	 * 
@@ -413,8 +410,8 @@ public class StudyService {
 	 * @param args
 	 * @throws FindException
 	 */
-	public static void main(String[] args) throws FindException {
-		StudyService service = new StudyService();
-		service.searchMyStudyUserInfo("user2@gmail.com", 53);
-	}
+//	public static void main(String[] args) throws FindException {
+//		StudyService service = new StudyService();
+//		service.searchMyStudyUserInfo("user2@gmail.com", 53);
+//	}
 }

@@ -19,6 +19,7 @@ import com.my.dto.SubjectDTOBomi;
 import com.my.dto.UserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
+import com.my.exception.ModifyException;
 import com.my.exception.RemoveException;
 import com.my.sql.MyConnection;
 
@@ -343,6 +344,12 @@ public class StudyRepositoryOracle implements StudyRepository {
 		}
 	}
 
+	/**
+	 * 스터디의 내용을 update한다.
+	 */
+	@Override
+	public void updateStudy(StudyDTO study) throws ModifyException {
+	}
 	
 	/**
 	 * 스터디장을 insert 한다 - insertStudy에서 connection을 받아서 한 트랜잭션에 있도록 한다.
@@ -472,4 +479,5 @@ public class StudyRepositoryOracle implements StudyRepository {
 			}
 		}
 	}
+
 }
