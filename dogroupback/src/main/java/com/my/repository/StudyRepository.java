@@ -7,6 +7,7 @@ import java.util.List;
 import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
 import com.my.dto.StudyDTOBomi;
+import com.my.dto.StudyUserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.exception.RemoveException;
@@ -33,22 +34,38 @@ public interface StudyRepository {
 	List<StudyDTO> selectStudyByEmail(String email) throws FindException;
 
 	/**
-	 * 선택한 스터디원의 email로 스터디원 상세 조회
-	 * 
+	 * 스터디원의 email로 스터디원의 List<HomeworkDTO> 리스트 반환한다.
 	 * @param email
+	 * @param sstudyId
 	 * @return 스터디원의 과제 리스트
 	 * @throws FindException 상세 조회중 오류시 발생
 	 */
-	HomeworkDTO selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException;
+	List<HomeworkDTO> selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException;
 
 	/**
-	 * 스터디 상세페이지를 조회한다(회원용)
-	 * 
+	 * 스터디의 모든 정보를 반환한다.
 	 * @param studyId
-	 * @return Study의 상세내용을 반환
+	 * @return 스터디 기본 정보 + 스터디의 현재 참여자수 + 스터디장의 성실도 + 스터디의 과목 정보 + 참여중인 스터디원들의 정보(유저 기본 정보 + 과제 제출 + 유효 출석일)
 	 * @throws FindException 상세 조회중 오류시 발생
 	 */
 	StudyDTOBomi selectStudy(int studyId) throws FindException;
+
+	/**
+	 * 스터디에 해당하는 제출한 과제를 반환한다.
+	 * @param studyId 스터디아이디
+	 * @return 
+	 * @throws FindException
+	 */
+	List<HomeworkDTO> selectHomeworkByStudyId(int studyId) throws FindException;
+	
+	/**
+	 * 스터디ID로 스터디의 기본정보를 반환한다.
+	 * @param studyId
+	 * @return 스터디 기본정보
+	 * @throws FindException
+	 */
+	StudyDTO selectStudyByStudyId(int studyId) throws FindException;
+
 	/**
 	 * 스터디를 Insert 한다
 	 * @param study
@@ -77,3 +94,4 @@ public interface StudyRepository {
 	 */
 	void deleteStudyUser(StudyDTO study, String email) throws RemoveException;
 }
+

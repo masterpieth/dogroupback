@@ -3,8 +3,8 @@ package com.my.dto;
 import java.util.List;
 
 /**
- * 스터디 관련 DTO
- * @author Chanmin Sung
+ * 스터디 관련 DTO2
+ * @author bomi
  *
  */
 public class StudyDTOBomi extends StudyDTO{
