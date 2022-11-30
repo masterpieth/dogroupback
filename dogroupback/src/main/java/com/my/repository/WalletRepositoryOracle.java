@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
+import javax.sql.RowSetInternal;
 import com.my.dto.WalletDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
@@ -82,7 +82,7 @@ public class WalletRepositoryOracle implements WalletRepository {
 	 * @throws Exception
 	 */
 	@Override
-	public void updateUserBalance(String email,  WalletDTO wallet) throws Exception {
+	public void updateUserBalance(WalletDTO wallet, int flag ) throws Exception {
 		Connection conn = null;
 		CallableStatement calStmt = null;
 		ResultSet rs = null;
@@ -92,8 +92,8 @@ public class WalletRepositoryOracle implements WalletRepository {
 			conn.setAutoCommit(false);
 			String procUserWalletSQL = "{call proc_userwallet(?, ?, ?, ?, ?)}";
 			calStmt = conn.prepareCall(procUserWalletSQL);
-			calStmt.setInt(1, 1);
-			calStmt.setString(2, email);
+			calStmt.setInt(1, flag);
+			calStmt.setString(2, wallet.getEmail());
 			calStmt.setString(3, wallet.getTransactionUser());
 			calStmt.setInt(4, 3);
 			calStmt.setInt(5, wallet.getTransactionMoney());
@@ -106,41 +106,10 @@ public class WalletRepositoryOracle implements WalletRepository {
 			e.printStackTrace();
 		} finally {
 			MyConnection.close(rs, calStmt, conn);
-		
+
 		}
 
 	}
 
-	/**
-	 * @param Wallet 지갑에 돈이 충전되는 프로시저를 호출함(새로운 거래내역생성)
-	 * @throws Exception
-	 */
-	@Override
-	public void insertWallet(WalletDTO wallet, String email) throws Exception {
-		Connection conn = null;
-		CallableStatement calStmt = null;
-		ResultSet rs = null;
-		// 지갑 충전 프로시저
-		try {
-
-			String procUserWalletSQL = "{call proc_userwallet(?, ?, ?, ?, ?)}";
-			calStmt = conn.prepareCall(procUserWalletSQL);
-			calStmt.setInt(1, 1);
-			calStmt.setString(2, email);
-			calStmt.setString(3, wallet.getTransactionUser());
-			calStmt.setInt(4, 3);
-			calStmt.setInt(5, wallet.getTransactionMoney());
-			calStmt.executeUpdate();
-
-			conn.commit();
-
-		} catch (SQLException e) {
-			conn.rollback();
-			e.printStackTrace();
-		} finally {
-			MyConnection.close(rs, calStmt, conn);
-		
-		}
-	}
-
+	
 }
