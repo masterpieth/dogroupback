@@ -158,15 +158,19 @@ public class StudyRepositoryOracle implements StudyRepository {
 
 			if (rs.next()) {
 				study = new StudyDTOBomi();
+				study.setStudyId(rs.getInt("study_id"));
+				study.setUserEmail(rs.getString("user_email"));
 				study.setStudyTitle(rs.getString("study_title"));
 				study.setStudyCertification(rs.getInt("study_certification"));
 				study.setStudySize(rs.getInt("study_size"));
 				study.setStudyFee(rs.getInt("study_fee"));
 				study.setStudyDiligenceCutline(rs.getInt("study_diligence_cutline"));
-				study.setStudyHomeworkPerWeek(rs.getInt("STUDY_HOMEWORK_PER_WEEK"));
+				study.setStudyHomeworkPerWeek(rs.getInt("study_homework_per_week"));
+				study.setStudyPostDate(rs.getDate("study_post_date"));
 				study.setStudyStartDate(rs.getDate("study_start_date"));
 				study.setStudyEndDate(rs.getDate("study_end_date"));
 				study.setStudyContent(rs.getClob("study_content"));
+				study.setStudyPaid(rs.getInt("study_paid"));
 				study.setStudyUsers(rs.getInt("cnt"));// 해당스터디 현재 참가인원수
 
 				UserDTO u = new UserDTO();
