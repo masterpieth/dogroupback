@@ -39,13 +39,24 @@ public class WalletService {
 			e.printStackTrace();
 		}
 	}
+
 	/**
 	 * 사용자의 지갑 목록을 반환한다.
-	 * @param email				//사용자 ID
+	 * 
+	 * @param email //사용자 ID
 	 * @return 지갑목록
 	 * @throws FindException
 	 */
 	public List<WalletDTO> searchTransactionListAll(String email) throws FindException {
 		return repository.selectWallet(email);
+	}
+
+	/**
+	 * 
+	 * @param wallet 사용자의 지갑에 돈을 충전한다
+	 * @throws Exception
+	 */
+	public void deposit(WalletDTO wallet) throws Exception {
+		
 	}
 }
