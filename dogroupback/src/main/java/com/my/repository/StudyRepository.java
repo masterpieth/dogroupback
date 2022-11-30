@@ -7,6 +7,7 @@ import java.util.List;
 import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
 import com.my.dto.StudyDTOBomi;
+import com.my.dto.StudySubjectDTOBomi;
 import com.my.dto.StudyUserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
@@ -72,7 +73,7 @@ public interface StudyRepository {
 	 * @param study			추가할 스터디 내용
 	 * @throws AddException 추가 중 오류시 발생한다.
 	 */
-	void insertStudy(StudyDTO study) throws AddException;
+	void insertStudy(StudyDTOBomi study) throws AddException;
 	
 	/**
 	 * 스터디를 update한다
@@ -101,6 +102,14 @@ public interface StudyRepository {
 	 * @throws RemoveException
 	 */
 	void deleteStudyUser(StudyDTO study, String email) throws RemoveException;
-	
+
+	/**
+	 * 스터디 과목을 insert 한다
+	 * @param study				스터디 정보
+	 * @param subjects			스터디과목들
+	 * @param conn				insertStudy시의 connection
+	 * @throws AddException		실패시 발생시킬 예외
+	 */
+	void insertStudySubject(StudyDTOBomi study, List<StudySubjectDTOBomi> subjects, Connection conn) throws AddException;
 }
 

@@ -27,11 +27,12 @@ import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.exception.RemoveException;
 import com.my.repository.StudyRepository;
+import com.my.repository.StudyRepositoryOracle;
 
 public class StudyService {
 	private StudyRepository repository;
 	private UserService userService;
-
+	
 	/**
 	 * 서비스 생성자
 	 */
@@ -62,6 +63,7 @@ public class StudyService {
 			e.printStackTrace();
 		}
 	}
+	
 	/**
 	 * 스터디의 모든 정보를 반환한다.
 	 * 
@@ -105,11 +107,12 @@ public class StudyService {
 	 * 
 	 * @param study
 	 */
-	public void openStudy(StudyDTO study) throws AddException {
+	public void openStudy(StudyDTOBomi study) throws AddException {
 		if (compareUserBalanceWithStudyFee(study.getStudyFee(), study.getUserEmail())) {
 			repository.insertStudy(study);
+		} else {
+			throw new AddException("스터디를 개설하는데 실패했습니다.");
 		}
-		throw new AddException("스터디를 개설하는데 실패했습니다.");
 	}
 
 	/**
@@ -122,8 +125,9 @@ public class StudyService {
 		if (compareUserBalanceWithStudyFee(study.getStudyFee(), user.getEmail())
 				&& compareUserDiligenceWithStudyDiligenceCutline(study.getStudyDiligenceCutline(), user.getEmail())) {
 			repository.insertStudyUser(study, user.getEmail());
+		} else {
+			throw new AddException("스터디 참여에 실패했습니다");
 		}
-		throw new AddException("스터디 참여에 실패했습니다");
 	}
 
 	/**

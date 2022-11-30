@@ -324,7 +324,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 * 스터디를 Insert 한다. Study와 StudyUser(스터디장)가 한 트랜잭션에 insert되고, 실패시 롤백한다.
 	 */
 	@Override
-	public void insertStudy(StudyDTO study) {
+	public void insertStudy(StudyDTOBomi study) {
 		Connection conn = null;
 		PreparedStatement preStmt = null;
 		ResultSet rs = null;
@@ -358,6 +358,8 @@ public class StudyRepositoryOracle implements StudyRepository {
 			}
 			// 스터디장 insert
 			insertStudyUserLeader(study, study.getUserEmail(), conn);
+			// 스터디 과목 insert
+			insertStudySubject(study, study.getSubjects(), conn); 
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -378,7 +380,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 */
 	@Override
 	public void insertStudyUserLeader(StudyDTO study, String email, Connection conn) throws AddException {
-		PreparedStatement preStmt = null;
 		CallableStatement calStmt = null;
 		ResultSet rs = null;
 		try {
@@ -392,11 +393,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 			calStmt.setInt(5, 2);
 			calStmt.setInt(6, study.getStudyFee());
 			calStmt.executeUpdate();
-			// 유저 insert
-			String insertStudyUserSQL = "INSERT INTO STUDY_USERS VALUES(?, ?)";
-			preStmt = conn.prepareStatement(insertStudyUserSQL);
-			preStmt.setInt(1, study.getStudyId());
-			preStmt.setString(2, email);
 			conn.commit();
 		} catch (Exception e) {
 			try {
@@ -495,4 +491,34 @@ public class StudyRepositoryOracle implements StudyRepository {
 		}
 	}
 
+	
+	/**
+	 * 스터디 과목을 insert 한다 - insertStudy에서 connection을 받아서 한 트랜잭션에 있도록 한다.
+	 */
+	@Override
+	public void insertStudySubject(StudyDTOBomi study, List<StudySubjectDTOBomi> subjects, Connection conn) throws AddException {
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
+		try {
+			//스터디 과목 insert
+			String insertStudySubjectSQL = "INSERT INTO STUDY_SUBJECT VALUES(?, ?)";
+			preStmt = conn.prepareStatement(insertStudySubjectSQL);
+			for(StudySubjectDTOBomi subject : subjects) {
+				preStmt.setInt(1, study.getStudyId());
+				preStmt.setString(2, subject.getSubject().getSubjectCode());
+				preStmt.executeUpdate();
+			}
+		} catch (Exception e) {
+			try {
+				e.printStackTrace();
+				conn.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			MyConnection.close(rs, preStmt, null);
+		}
+	}
+
+	
 }

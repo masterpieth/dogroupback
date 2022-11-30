@@ -16,7 +16,7 @@ public class StudyDTOBomi extends StudyDTO{
 		super();
 	}
 
-	public StudyDTOBomi( List<StudySubjectDTOBomi> subjects, UserDTO studyLeader, List<StudyUserDTO> studyUsers) {
+	public StudyDTOBomi(List<StudySubjectDTOBomi> subjects, UserDTO studyLeader, List<StudyUserDTO> studyUsers) {
 		super();
 		
 		this.subjects = subjects;
