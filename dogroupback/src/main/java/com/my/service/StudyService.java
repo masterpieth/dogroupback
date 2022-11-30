@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.dto.HomeworkDTO;
+import com.my.dto.PageBean;
 import com.my.dto.StudyDTO;
 import com.my.dto.StudyDTOBomi;
 import com.my.dto.StudyUserDTO;
@@ -408,6 +409,35 @@ public class StudyService {
 			throw new FindException(e.getMessage());
 		}
 	}
+	
+	/**
+	 * 검색 조건에 맞는 스터디의 리스트와 페이징버튼정보를 페이지빈으로 반환한다.
+	 * @param currentPage 현재 페이지
+	 * @param studyTitle 검색할 스터디 타이틀명
+	 * @param studySize 검색할 스터디 정원
+	 * @return PageBean<StudyDTO>
+	 * @throws FindException
+	 */
+	public PageBean<StudyDTO> getPageBean(int currentPage, String studyTitle, int studySize) throws FindException {
+		List<StudyDTO> list = searchStudy(currentPage, PageBean.CNT_PER_PAGE, studyTitle, studySize);
+		int totalCnt = repository.studyCount(studyTitle, studySize);
+		PageBean<StudyDTO> pageBean = new PageBean<>(currentPage, list, totalCnt);
+		return pageBean;
+	}
+	
+	/**
+	 * 검색 조건에 맞는 스터디 리스트를 반환한다.
+	 * @param currentPage 현재 페이지
+	 * @param cntPerPage 페이당 목록 개수
+	 * @param studyTitle 검색할 스터디 타이틀명
+	 * @param studySize 검색할 스터디 정원
+	 * @return List<StudyDTO>
+	 * @throws FindException
+	 */
+	public List<StudyDTO> searchStudy(int currentPage, int cntPerPage, String studyTitle, int studySize) throws FindException {
+		return repository.selectStudy(currentPage, cntPerPage, studyTitle, studySize);
+	}
+
 	
 	/**
 	 * 테스트용 메인
