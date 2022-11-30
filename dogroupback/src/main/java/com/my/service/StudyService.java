@@ -35,9 +35,8 @@ public class StudyService {
 	/**
 	 * 서비스 생성자
 	 */
-	public StudyService() {
-		String propertiesFileName = "repository.properties";	//3차수정을 외부파일에서 한다
-		Properties env = new Properties();					
+	public StudyService(String propertiesFileName) {
+		Properties env = new Properties();
 		try {
 			env.load(new FileInputStream(propertiesFileName));
 			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
@@ -413,8 +412,8 @@ public class StudyService {
 	 * @param args
 	 * @throws FindException
 	 */
-	public static void main(String[] args) throws FindException {
-		StudyService service = new StudyService();
-		service.searchMyStudyUserInfo("user2@gmail.com", 53);
-	}
+//	public static void main(String[] args) throws FindException {
+//		StudyService service = new StudyService();
+//		service.searchMyStudyUserInfo("user2@gmail.com", 53);
+//	}
 }

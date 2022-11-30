@@ -10,6 +10,7 @@ import com.my.dto.StudyDTOBomi;
 import com.my.dto.StudyUserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
+import com.my.exception.ModifyException;
 import com.my.exception.RemoveException;
 
 public interface StudyRepository {
@@ -68,10 +69,17 @@ public interface StudyRepository {
 
 	/**
 	 * 스터디를 Insert 한다
-	 * @param study
+	 * @param study			추가할 스터디 내용
+	 * @throws AddException 추가 중 오류시 발생한다.
 	 */
-	void insertStudy(StudyDTO study);
-
+	void insertStudy(StudyDTO study) throws AddException;
+	
+	/**
+	 * 스터디를 update한다
+	 * @param study				업데이트할 스터디 내용
+	 * @throws ModiftException 	업데이트 중 오류시 발생한다.
+	 */
+	void updateStudy(StudyDTO study) throws ModifyException;
 	/**
 	 * 스터디원을 Insert 한다 - 지갑 관련 추가-삭제 등을 담당하는 프로시저를 호출한다.
 	 * flag 1: 스터디원 추가
@@ -93,5 +101,6 @@ public interface StudyRepository {
 	 * @throws RemoveException
 	 */
 	void deleteStudyUser(StudyDTO study, String email) throws RemoveException;
+	
 }
 
