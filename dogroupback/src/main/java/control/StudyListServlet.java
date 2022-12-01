@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.my.dto.PageBean;
 import com.my.dto.StudyDTO;
 import com.my.exception.FindException;
 import com.my.service.StudyService;
@@ -42,10 +43,12 @@ public class StudyListServlet extends HttpServlet {
 		//JSON문자열 얻기
 		ObjectMapper mapper = new ObjectMapper();
 		Map<String, Object>map = new HashMap<>();
+		
+		int currentPage = Integer.parseInt(request.getParameter("currentPage"));
 		try {
-			List<StudyDTO> result = service.searchMyStudy("user1@gmail.com");
+			PageBean<StudyDTO> pb = service.getPageBean(currentPage, null, 0);
 			map.put("status", 1);
-			map.put("myStudyList", result);
+			map.put("pb", pb);
 		} catch (FindException e) {
 			e.printStackTrace();
 			map.put("status", 0);

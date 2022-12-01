@@ -43,7 +43,7 @@ public class StudyService {
 			env.load(new FileInputStream(propertiesFileName));
 			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
 			Class<?> clazz = Class.forName(className); 		//객체생성 반환형이 object
-			Object obj = clazz.getDeclaredConstructor().newInstance();	
+			Object obj = clazz.getDeclaredConstructor().newInstance();
 			repository = (StudyRepository)obj;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -64,6 +64,40 @@ public class StudyService {
 			e.printStackTrace();
 		}
 	}
+	
+	/**
+	 * 시연용 StudyService 생성자(추후삭제)
+	 * @param propertiesFileName
+	 */
+	public StudyService(String propertiesFileName, UserService userService) {
+		this.userService = userService;
+		Properties env = new Properties();
+		try {
+			env.load(new FileInputStream(propertiesFileName));
+			String className = env.getProperty("study");	//클래스이름을 String 타입으로 찾아온것 
+			Class<?> clazz = Class.forName(className); 		//객체생성 반환형이 object
+			Object obj = clazz.getDeclaredConstructor().newInstance();
+			repository = (StudyRepository)obj;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	//연결된 자원을 읽는다. key = value  
+		catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	/**
 	 * 스터디의 모든 정보를 반환한다.
@@ -149,7 +183,6 @@ public class StudyService {
 	 */
 	private boolean compareUserBalanceWithStudyFee(int studyFee, String email) {
 		try {
-			userService = new UserService("repository.properties");
 			UserDTO user = userService.searchUserInfo(email);
 			int userBalance = user.getUserBalance();
 			if (userBalance > studyFee) {
@@ -167,7 +200,6 @@ public class StudyService {
 	 */
 	private boolean compareUserDiligenceWithStudyDiligenceCutline(int studyDiligenceCutline, String email) {
 		try {
-			userService = new UserService("repository.properties");
 			UserDTO user = userService.searchUserInfo(email);
 			int userDiligence = user.getDiligence();
 			if (studyDiligenceCutline < userDiligence) {
