@@ -85,7 +85,6 @@ public class WalletRepositoryOracle implements WalletRepository {
 	public void updateUserBalance(WalletDTO wallet, int flag ) throws Exception {
 		Connection conn = null;
 		CallableStatement calStmt = null;
-		ResultSet rs = null;
 		// 지갑 충전 프로시저
 		try {
 			conn = MyConnection.getConnection();
@@ -105,7 +104,7 @@ public class WalletRepositoryOracle implements WalletRepository {
 			conn.rollback();
 			e.printStackTrace();
 		} finally {
-			MyConnection.close(rs, calStmt, conn);
+			MyConnection.close(null, calStmt, conn);
 
 		}
 

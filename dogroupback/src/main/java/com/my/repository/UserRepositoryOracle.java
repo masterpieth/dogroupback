@@ -7,13 +7,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import com.my.dto.UserDTO;
+import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.sql.MyConnection;
 
 public class UserRepositoryOracle implements UserRepository {
 	
 	@Override
-	public void insertUser(UserDTO inputUser) {
+	public void insertUser(UserDTO inputUser) throws AddException {
 		Connection conn = null;
 		PreparedStatement preStmt = null;
 		//기본 성실도:50, 잔액:0, 상태:1
@@ -28,6 +29,7 @@ public class UserRepositoryOracle implements UserRepository {
 			preStmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
+			throw new AddException("회원 추가에 실패했습니다."); 
 		} finally {
 			MyConnection.close(preStmt, conn);
 		}
@@ -54,7 +56,7 @@ public class UserRepositoryOracle implements UserRepository {
                 UserDTO userInfo = new UserDTO(email, name, password, diligence, userBalance, status);
                 return userInfo;
             } else {
-                throw new FindException("정보를 찾을수없습니다.");
+                throw new FindException();
             }
         } catch (Exception e) {
             e.printStackTrace();

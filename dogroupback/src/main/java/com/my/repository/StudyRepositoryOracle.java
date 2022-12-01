@@ -192,7 +192,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 					studySubjectList.add(studySubjectDtoBomi);
 				}
 				study.setSubjects(studySubjectList);
-				// ------- 스터디 기본 정보, 스터디원 인원수, 스터디장의 성실도, 스터디의 과목 목록 SEARCH START -------
+				// ------- 스터디 기본 정보, 스터디원 인원수, 스터디장의 성실도, 스터디의 과목 목록 SEARCH END -------
 
 				// ------- 스터디원 목록(+성실도) SEARCH START -------
 				String selectStudyUserSQL = "select * from study_users join users using (user_email) where study_id = ?";
@@ -441,13 +441,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 			}
 		} finally {
 			MyConnection.close(rs, preStmt, conn);
-			if (calStmt != null) {
-				try {
-					calStmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 	}
 
@@ -505,7 +498,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 	public void insertStudySubject(StudyDTOBomi study, List<StudySubjectDTOBomi> subjects, Connection conn)
 			throws AddException {
 		PreparedStatement preStmt = null;
-		ResultSet rs = null;
 		try {
 			// 스터디 과목 insert
 			String insertStudySubjectSQL = "INSERT INTO STUDY_SUBJECT VALUES(?, ?)";
@@ -523,7 +515,7 @@ public class StudyRepositoryOracle implements StudyRepository {
 				e1.printStackTrace();
 			}
 		} finally {
-			MyConnection.close(rs, preStmt, null);
+			MyConnection.close(null, preStmt, null);
 		}
 	}
 	
@@ -587,7 +579,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 				preStmt.setInt(4, endRow);
 			} else {
 				studyStudySQL = "SELECT * FROM  ( SELECT rownum rn, a.* FROM (SELECT * FROM study WHERE study_title Like ? order by study_id) a )WHERE rn BETWEEN ? AND ?";
-				;
 				preStmt = conn.prepareStatement(studyStudySQL);
 				preStmt.setString(1, "%" + studyTitle + "%");
 				preStmt.setInt(2, startRow);

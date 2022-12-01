@@ -98,13 +98,12 @@ public class StudyService {
 		}
 	}
 	
-	
 	/**
 	 * 스터디의 모든 정보를 반환한다.
 	 * 
 	 * @param studyId
 	 * @return스터디 기본 정보 + 스터디의 현재 참여자수 + 스터디장의 성실도 + 스터디의 과목 정보 + 참여중인 스터디원들의 정보(유저
-	 *            기본 정보 + 과제 제출 + 유효 출석일)
+	 *            기본 정보 + 과제 제출 + //추후 추가 예정 : 유효 출석일)
 	 * @throws FindException
 	 */
 	public StudyDTOBomi searchStudyInfo(int studyId) throws FindException {
@@ -238,8 +237,7 @@ public class StudyService {
 	 */
 	public void checkMyGithubCommit(String email, int studyId) throws AddException {
 		try {
-			Date date = getGithubEventsDate(email);
-			Date created_at = new Date(date.getTime());
+			Date created_at = getGithubEventsDate(email);
 			repository.insertHomeworkByEmail(email, studyId, created_at);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -294,7 +292,7 @@ public class StudyService {
 					created_at = created_at.replace("Z", "");
 					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 					Date eventUtilDate = (Date) formatter.parse(created_at);
-					Date todayUtilDate = (Date) formatter.parse(created_at);
+					Date todayUtilDate = (Date) formatter.parse(new Date().toString());
 
 					if (eventUtilDate.equals(todayUtilDate)) {
 						return eventUtilDate;
@@ -414,12 +412,12 @@ public class StudyService {
 			long diff = (standardDate.getTime() - strStartDt.getTime()); // 기준일자 스터디 시작일의 시간차이
 			TimeUnit time = TimeUnit.DAYS; // 시간차이를 날짜로 변환
 			double studyDays = (double) time.convert(diff, TimeUnit.MILLISECONDS);
-			int totalHomework = (int) Math.ceil(studyDays / 7); // 현시점에 총 제출해야할 횟수
+			int totalWeek = (int) Math.ceil(studyDays / 7); // 현시점에 총 제출해야할 횟수
 			// System.out.println("제출해야 할 횟수:" + totalHomework);
 
 			List<HomeworkDTO> homeworkList = user.getHomeworkList(); // 스터디의 전체 과제 내역을 가져온다.
 
-			user.setCheckHomework(new int[totalHomework]);
+			user.setCheckHomework(new int[totalWeek]);
 			int[] arr = user.getCheckHomework();
 			for (HomeworkDTO hw : homeworkList) {
 				Date submitDt = hw.getStudySubmitDt(); // 제출일
@@ -434,7 +432,7 @@ public class StudyService {
 				// System.out.print(User.getEmail() + "님 : " + (i + 1) + "주차] : " + ((Arr[i] !=
 				// 0) ? "출석 인정" : "출석 불인정") + "\t");
 			}
-
+			user.setCheckHomework(arr);
 			return user;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -470,14 +468,4 @@ public class StudyService {
 		return repository.selectStudy(currentPage, cntPerPage, studyTitle, studySize);
 	}
 
-	
-	/**
-	 * 테스트용 메인
-	 * @param args
-	 * @throws FindException
-	 */
-//	public static void main(String[] args) throws FindException {
-//		StudyService service = new StudyService();
-//		service.searchMyStudyUserInfo("user2@gmail.com", 53);
-//	}
 }
