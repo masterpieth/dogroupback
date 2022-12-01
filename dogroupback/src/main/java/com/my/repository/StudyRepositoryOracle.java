@@ -379,7 +379,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 	public void insertStudyUserLeader(StudyDTO study, String email, Connection conn) throws AddException {
 		CallableStatement calStmt = null;
 		ResultSet rs = null;
-		PreparedStatement preStmt = null;
 		try {
 			// 지갑 관련 프로시저
 			String procSQL = "{ call proc_wallet(?, ?, ?, ?, ?, ?) }";
@@ -401,14 +400,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 			}
 		} finally {
 			MyConnection.close(rs, calStmt, null);
-			MyConnection.close(rs, preStmt, conn);
-			if (calStmt != null) {
-				try {
-					calStmt.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 	}
 

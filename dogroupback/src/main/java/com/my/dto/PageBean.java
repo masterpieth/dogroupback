@@ -4,7 +4,7 @@ import java.util.List;
 
 public class PageBean<T> {
 	private int currentPage;// 현재페이지
-	public static final int CNT_PER_PAGE = 2; // 페이지당 보여줄 상품수
+	public static final int CNT_PER_PAGE = 5; // 페이지당 보여줄 상품수
 	private List<T> list; // 페이지에 해당하는 목록
 	private int totalCnt; // 총목록수
 	private int totalPage; // 총페이지수
@@ -16,11 +16,20 @@ public class PageBean<T> {
 		this.currentPage = currentPage;
 		this.list = list;
 		this.totalCnt = totalCnt;
-		this.totalPage = (int) (Math.ceil((double) totalCnt / CNT_PER_PAGE));
-		startPage = (currentPage - 1) / cntPerPageGroup * cntPerPageGroup + 1;
-		endPage = startPage + cntPerPageGroup - 1;
-		if (totalPage < endPage) {
+		this.totalPage = (int)(Math.ceil((double)totalCnt/CNT_PER_PAGE));
+		
+		if(currentPage <= cntPerPageGroup/2) {
+			startPage = 1;
+			endPage = cntPerPageGroup;
+		}
+		else if(currentPage > (totalPage - cntPerPageGroup/2)) {
+			if(currentPage == totalPage) startPage = totalPage - cntPerPageGroup + 1;
+			else startPage = totalPage - cntPerPageGroup;
 			endPage = totalPage;
+		}
+		else {
+			startPage = currentPage - cntPerPageGroup/2;
+			endPage = currentPage + cntPerPageGroup/2;
 		}
 	}
 
