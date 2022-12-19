@@ -9,7 +9,7 @@ public class UserDTO {
 	private String email;			//User 이메일(PK)
 	private String name;			//User 이름
 	private String password;		//User 비밀번호
-	private int diligence;			//User 성실도
+	private double diligence;		//User 성실도
 	private int userBalance;		//User 지갑 현재 총 잔액
 	private int status;				//User 현재상태 1:활성회원 / 0:탈퇴회원
 
@@ -17,7 +17,7 @@ public class UserDTO {
 		super();
 	}
 
-	public UserDTO(String email, String name, String password, int diligence, int userBalance, int status) {
+	public UserDTO(String email, String name, String password, double diligence, int userBalance, int status) {
 		super();
 		this.email = email;
 		this.name = name;
@@ -51,11 +51,11 @@ public class UserDTO {
 		this.password = password;
 	}
 
-	public int getDiligence() {
+	public double getDiligence() {
 		return diligence;
 	}
 
-	public void setDiligence(int diligence) {
+	public void setDiligence(double diligence) {
 		this.diligence = diligence;
 	}
 

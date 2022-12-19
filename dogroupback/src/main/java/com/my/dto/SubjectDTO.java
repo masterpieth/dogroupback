@@ -1,15 +1,20 @@
 package com.my.dto;
 
-public class SubjectDTOBomi {
+/**
+ * 과목 분류 DTO
+ * @author BOMI
+ *
+ */
+public class SubjectDTO {
 	private String subjectCode;
 	private String subjectName;
-	private SubjectDTOBomi subjectParent;
+	private SubjectDTO subjectParent;
 	
-	public SubjectDTOBomi() {
+	public SubjectDTO() {
 		super();
 	}
 	
-	public SubjectDTOBomi(String subjectCode, String subjectName, SubjectDTOBomi subjectParent) {
+	public SubjectDTO(String subjectCode, String subjectName, SubjectDTO subjectParent) {
 		super();
 		this.subjectCode = subjectCode;
 		this.subjectName = subjectName;
@@ -27,12 +32,10 @@ public class SubjectDTOBomi {
 	public void setSubjectName(String subjectName) {
 		this.subjectName = subjectName;
 	}
-	public SubjectDTOBomi getSubjectParent() {
+	public SubjectDTO getSubjectParent() {
 		return subjectParent;
 	}
-	public void setSubjectParent(SubjectDTOBomi subjectParent) {
+	public void setSubjectParent(SubjectDTO subjectParent) {
 		this.subjectParent = subjectParent;
 	}
-	
-	
 }

@@ -21,7 +21,7 @@ public class StudyUserDTO extends UserDTO {
 	public StudyUserDTO() {
 		super();
 	}
-	public StudyUserDTO(String email, String name, String password, int diligence, int userBalance, int status) {
+	public StudyUserDTO(String email, String name, String password, double diligence, int userBalance, int status) {
 		super(email, name, password, diligence, userBalance, status);
 	}
 	public int getStudyId() {
