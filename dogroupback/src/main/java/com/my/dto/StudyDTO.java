@@ -33,6 +33,7 @@ public class StudyDTO {
 		super();
 	}
 
+
 	public StudyDTO(int studyId, String userEmail, String studyTitle, int studySize, int studyFee,
 			int studyCertification, double studyDiligenceCutline, Date studyPostDate, Date studyStartDate,
 			Date studyEndDate, int studyHomeworkPerWeek, int studyPaid, int studyGatheredSize, Clob studyContent) {
@@ -221,7 +222,6 @@ public class StudyDTO {
 		return studyUsers;
 	}
 
-	
 	public void setStudyUsers(List<StudyUserDTO> studyUsers) {
 		this.studyUsers = studyUsers;
 	}

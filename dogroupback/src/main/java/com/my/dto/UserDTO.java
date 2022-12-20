@@ -51,10 +51,11 @@ public class UserDTO {
 		this.password = password;
 	}
 
+
 	public double getDiligence() {
 		return diligence;
 	}
-
+  
 	public void setDiligence(double diligence) {
 		this.diligence = diligence;
 	}

@@ -9,8 +9,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.Collections;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,12 +25,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.dto.HomeworkDTO;
 import com.my.dto.PageBean;
 import com.my.dto.StudyDTO;
+
 import com.my.dto.StudyUserDTO;
 import com.my.dto.UserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.exception.RemoveException;
 import com.my.repository.StudyRepository;
+
 
 public class StudyService {
 	private StudyRepository repository;
@@ -206,7 +210,7 @@ public class StudyService {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * 버튼형 출석 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
 	 * 
@@ -353,6 +357,7 @@ public class StudyService {
 			int totalHomework = (int) Math.ceil(studyDays / 7); // 현시점에 총 제출해야할 횟수
 
 			List<StudyUserDTO> homeworkTotalList = new ArrayList<>(); // 위의 맵을 리스트로 갖는다.
+
 			StudyUserDTO user = null;
 			String old_user_email = "";
 			List<HomeworkDTO> homeworkList = repository.selectHomeworkByStudyId(studyId); // 스터디의 전체 과제 내역을 가져온다.
@@ -564,4 +569,5 @@ public class StudyService {
 		distributePrizeMoney(studyId);
 		updateStudyUserDiligence(studyId);
 	}
+
 }

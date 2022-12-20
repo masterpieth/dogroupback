@@ -22,6 +22,7 @@ public class StudyUserDTO extends UserDTO {
 		super();
 	}
 	public StudyUserDTO(String email, String name, String password, double diligence, int userBalance, int status) {
+
 		super(email, name, password, diligence, userBalance, status);
 	}
 	public int getStudyId() {
