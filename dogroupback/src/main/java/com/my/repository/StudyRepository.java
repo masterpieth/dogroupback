@@ -63,15 +63,6 @@ public interface StudyRepository {
 	List<HomeworkDTO> selectHomeworkByStudyId(int studyId) throws FindException;
 
 	/**
-	 * 스터디ID로 스터디의 기본정보를 반환한다.
-	 * 
-	 * @param studyId
-	 * @return 스터디 기본정보
-	 * @throws FindException
-	 */
-	StudyDTO selectStudyByStudyId(int studyId) throws FindException;
-
-	/**
 	 * 스터디를 Insert 한다
 	 * 
 	 * @param study 추가할 스터디 내용

@@ -199,8 +199,13 @@ public class StudyRepositoryOracle implements StudyRepository {
 				studyUserList.add(user);
 			}
 			return studyUserList;
-      }
-  }
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FindException(e.getMessage());
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+		}
+	}
 
 	/**
 	 * 스터디의 모든 과제 제출 내역을 리스트로 반환한다. selectStudy스터디 목록조회(회원용) study, study_users,
@@ -257,41 +262,6 @@ public class StudyRepositoryOracle implements StudyRepository {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AddException("HomeWork Insert 실패");
-		} finally {
-			MyConnection.close(rs, preStmt, conn);
-		}
-	}
-
-	/**
-	 * 스터디의 모든 과제 제출 내역을 리스트로 반환한다. selectStudy스터디 목록조회(회원용) study, study_users,
-	 * study_subject, subject테이블사용 현재 해당 스터디에 참가중인 회원수를 포함하여 보여줌 하나의 studyId로 검색했을때
-	 * 서로다른 스터디과목명은 3개가 온다.
-	 */
-	@Override
-	public List<HomeworkDTO> selectHomeworkByStudyId(int studyId) throws FindException {
-		Connection conn = null;
-		PreparedStatement preStmt = null;
-		ResultSet rs = null;
-		List<HomeworkDTO> homeworkList = new ArrayList<>();
-		String homeworListSQL = "select * from homework where " + "study_id = ? order by user_email, study_submit_dt";
-		try {
-			conn = MyConnection.getConnection();
-			preStmt = conn.prepareStatement(homeworListSQL);
-			preStmt.setInt(1, studyId);
-			rs = preStmt.executeQuery();
-
-			while (rs.next()) {
-				String userEmail = rs.getString("user_email");
-				Date studySubmitDt = rs.getDate("study_submit_dt");
-				HomeworkDTO homework = new HomeworkDTO();
-				homework.setUserEmail(userEmail);
-				homework.setStudySubmitDt(studySubmitDt);
-				homeworkList.add(homework);
-			}
-			return homeworkList;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new FindException(e.getMessage());
 		} finally {
 			MyConnection.close(rs, preStmt, conn);
 		}
