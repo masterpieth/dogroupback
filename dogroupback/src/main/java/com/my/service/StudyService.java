@@ -9,6 +9,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+
+import java.util.Arrays;
+import java.util.Collections;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,14 +25,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.my.dto.HomeworkDTO;
 import com.my.dto.PageBean;
 import com.my.dto.StudyDTO;
-import com.my.dto.StudyDTOBomi;
+
 import com.my.dto.StudyUserDTO;
 import com.my.dto.UserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
 import com.my.exception.RemoveException;
 import com.my.repository.StudyRepository;
-import com.my.repository.StudyRepositoryOracle;
+
 
 public class StudyService {
 	private StudyRepository repository;
@@ -99,20 +103,17 @@ public class StudyService {
 	}
 	
 	/**
-	 * 스터디의 모든 정보를 반환한다.
-	 * 
+	 * 스터디의 정보를 반환한다.
 	 * @param studyId
-	 * @return스터디 기본 정보 + 스터디의 현재 참여자수 + 스터디장의 성실도 + 스터디의 과목 정보 + 참여중인 스터디원들의 정보(유저
-	 *            기본 정보 + 과제 제출 + //추후 추가 예정 : 유효 출석일)
+	 * @return스터디 스터디의 기본 정보를 반환한다. 스터디의 현재 참여자수 + 스터디장의 성실도 + 스터디의 과목 정보
 	 * @throws FindException
 	 */
-	public StudyDTOBomi searchStudyInfo(int studyId) throws FindException {
-		return repository.selectStudy(studyId);
+	public StudyDTO searchStudyInfo(int studyId) throws FindException {
+		return repository.selectStudyByStudyId(studyId);
 	}
 
 	/**
 	 * 스터디원의 상세정보를 조회한다.
-	 * 
 	 * @param email   회원 email
 	 * @param studyId 스터디 id
 	 * @return StudyUserDTO(스터디 id, 과제 전체 제출 내역, 주차별 출석 인정 정보)
@@ -141,7 +142,7 @@ public class StudyService {
 	 * 
 	 * @param study
 	 */
-	public void openStudy(StudyDTOBomi study) throws AddException {
+	public void openStudy(StudyDTO study) throws AddException {
 		if (compareUserBalanceWithStudyFee(study.getStudyFee(), study.getUserEmail())) {
 			repository.insertStudy(study);
 		} else {
@@ -197,10 +198,10 @@ public class StudyService {
 	 * 사용자의 성실도와 스터디의 성실도 커트라인을 비교하여 입장을 할 수 있는지 없는지를 반환한다.
 	 * @return 스터디의 성실도 커트라인보다 사용자의 성실도가 높으면 true / 낮으면 false를 반환한다.
 	 */
-	private boolean compareUserDiligenceWithStudyDiligenceCutline(int studyDiligenceCutline, String email) {
+	private boolean compareUserDiligenceWithStudyDiligenceCutline(double studyDiligenceCutline, String email) {
 		try {
 			UserDTO user = userService.searchUserInfo(email);
-			int userDiligence = user.getDiligence();
+			double userDiligence = user.getDiligence();
 			if (studyDiligenceCutline < userDiligence) {
 				return true;
 			}
@@ -209,6 +210,7 @@ public class StudyService {
 		}
 		return false;
 	}
+
 	/**
 	 * 버튼형 출석 과제를 체크한다. Insert 가 안될 경우 예외를 발생시킨다.
 	 * 
@@ -353,9 +355,9 @@ public class StudyService {
 			TimeUnit time = TimeUnit.DAYS; // 시간차이를 날짜로 변환
 			double studyDays = (double) time.convert(diff, TimeUnit.MILLISECONDS);
 			int totalHomework = (int) Math.ceil(studyDays / 7); // 현시점에 총 제출해야할 횟수
-			// System.out.println("제출해야 할 횟수:" + totalHomework);
 
-			List<StudyUserDTO> homeworkTotalList = new ArrayList<>(); // 위의 맵을 리스트로 같는다.
+			List<StudyUserDTO> homeworkTotalList = new ArrayList<>(); // 위의 맵을 리스트로 갖는다.
+
 			StudyUserDTO user = null;
 			String old_user_email = "";
 			List<HomeworkDTO> homeworkList = repository.selectHomeworkByStudyId(studyId); // 스터디의 전체 과제 내역을 가져온다.
@@ -466,6 +468,106 @@ public class StudyService {
 	 */
 	public List<StudyDTO> searchStudy(int currentPage, int cntPerPage, String studyTitle, int studySize) throws FindException {
 		return repository.selectStudy(currentPage, cntPerPage, studyTitle, studySize);
+	}
+
+	/**
+	 * 스터디 종료시 상금을 분배(일괄 정산)한다.
+	 * @param study
+	 * @throws FindException 
+	 */
+	public void distributePrizeMoney(int studyId) throws FindException {
+		//0. 스터디 정보 가져오기 기본 정보 + 스터디장 userId
+		StudyDTO study = repository.selectStudyByStudyId(studyId);
+		//1. 스터디원 모두의 주차별 출석(유효 과제 상태)을 조회한다.
+		List<StudyUserDTO> studyUsers = searchMyStudyHomeworkState(studyId);
+		
+		//2. 스터디의 진행 기간과 입장금액 정보를 가져온다.
+		int studyFee = study.getStudyFee(); //현재 스터디의 입장 요금은 얼마인가?
+		int howLongStudyWeek = study.getStudyFee(); //스터디의 입장요금은?
+		
+		//3. 스터디원의 달성률 계산 후 개인의 1차 환금액 스터디 누적 환금액를 구한다.
+		int studyGatheredSize = study.getStudyGatheredSize(); //스터디 진행 인원 수는?
+		int studyPrize = studyFee * studyGatheredSize; //우선 스터디의 누적 벌금은 스터디 입장금액 * 스터디 인원수로 계산한 후 스터디원의 1차 환급액을 참가하는 방식으로 계산한다.
+		Map<String, Integer> studyUserRefundInfo = new HashMap<>(); //1차 환금액 정보를 담을 Map
+		
+		for(StudyUserDTO studyUser : studyUsers) {
+			int[] checkHomework = studyUser.getCheckHomework(); //스터디원의 주차별 유효과제 제출 리스트를 가져온다.
+			int validHomeworkCnt = Collections.frequency(Arrays.asList(checkHomework), 1); //스터디원의 유효 과제 제출 개수를 계산한다.
+			
+			double studyAchievementRate; //스터디원의 스터디 달성률을 계산한다. (유효과제 개수 / 진행 주차) 0~1 사이값
+			if(validHomeworkCnt == 0 ) studyAchievementRate = 0;
+			else studyAchievementRate = (double)validHomeworkCnt / howLongStudyWeek;	
+			
+			//금액의 최소 단위는 10원으로 한다.
+			double studyUserRefund = (double)studyFee * (1-studyAchievementRate);//1차 환금액 : 1차로 스터디원의 벌금을 제외한 환금 금액을 계산한다.
+			studyUserRefund = (int)(studyUserRefund + 9) / 10 * 10; // 1의 자릿수에서 올림
+			studyPrize -= studyUserRefund; // 전체 studyPenalty에서 스터디원 개개인의 1차 환급액을 차감하여 공동 상금을 구한다.
+			studyUserRefundInfo.put(studyUser.getEmail(), (int)studyUserRefund); //스터디원 email을 key로, 1차 환금액을 value로 저장한다.
+		}
+		//4. 1차 환금액과 스터디 누적 환금액을 n등분하여 스터디 유저에게 환급한다. 스터디의 STUDY_PAID 값을 TRUE(1)로 준다.
+		String studyLeaderEmail = study.getStudyLeader().getEmail();
+		int userPrize = (int)studyPrize/studyGatheredSize; //스터디 전체 상금을 스터디 인원으로 나눈 값(정수)
+		int prizeMod = studyPrize%studyGatheredSize; //스터디 전체 상금을 나누고 남은 금액(정수)
+		int userPrizeRound = (userPrize/10)*10;	//유저상금 1의자리 버림 연산
+		for(StudyUserDTO studyUser : studyUsers) {
+			String email = studyUser.getEmail();
+			if(studyUser.getEmail().equals(studyLeaderEmail)) {
+				//스터디장인 경우 자투리 금액을 추가로 가져간다. n등분한 유저상금 + 자투리 금액 + 스터디원들의 1의자리 버림 금액 액수
+				userPrizeRound = userPrizeRound + prizeMod + (userPrize - userPrizeRound) * studyGatheredSize;
+			}
+			repository.refundToUser(studyId, email, studyUserRefundInfo.get(email) + userPrizeRound);
+			//환금액의 소수점 계산을 어떻게 처리할 것인가? -> 스터디장이 자투리 금액을 가져간다.
+		}
+	}
+	
+	/**
+	 * 스터디 종료시 스터디원들의 개인의 달성률에 따른 성실도를 반영한다.
+	 * @param study
+	 * @throws Exception 
+	 */
+	public void updateStudyUserDiligence(int studyId) throws Exception {
+		//1. 스터디원 모두의 주차별 출석(유효 과제 상태)을 조회한다.
+		List<StudyUserDTO> studyUsers = searchMyStudyHomeworkState(studyId);
+		
+		//2. 스터디의 성실도 정보를 가져온다.(최대 성실도 보상 값)
+		int howLongStudyWeek = studyUsers.get(0).getHomeworkList().size(); //현재 스터디가 몇주 차인가?
+		
+		int studyDeligence; //스터디의 주차를 기준으로 보상 성실도 최대값 부여(6주 단위로 성실도 2추가, 최대 성실도는 10)
+		if(howLongStudyWeek>=25) studyDeligence = 10;
+		else if(howLongStudyWeek == 1) studyDeligence = 2;
+		else studyDeligence = (howLongStudyWeek-1/6)*2 + 2;
+		
+		//3. 스터디원의 달성률 계산 후 성실도를 계산한다.
+		for(StudyUserDTO studyUser : studyUsers) {
+			String email = studyUser.getEmail();
+			int[] checkHomework = studyUser.getCheckHomework(); //스터디원의 주차별 유효과제 제출 리스트를 가져온다.
+			int validHomeworkCnt = Collections.frequency(Arrays.asList(checkHomework), 1); //스터디원의 유효 과제 제출 개수를 계산한다.
+			
+			double studyAchievementRate; //스터디원의 스터디 달성률을 계산한다. (유효과제 개수 / 진행 주차) 0~1 사이값
+			if(validHomeworkCnt == 0 ) studyAchievementRate = 0;
+			else studyAchievementRate = (double)validHomeworkCnt / howLongStudyWeek;	
+			
+			//스터디 기간(주차) 			w
+			//스터디 성실도 보상 			d
+			//스터디원의 스터디 달성율 		p
+			//스터디 종료 시 성실도 보상 식 	d * (log(w){w*p)-0.5)
+			double updateDeligeence = studyDeligence * ((Math.log(howLongStudyWeek * studyAchievementRate) / (double)Math.log(howLongStudyWeek)) - 0.5);
+			int deligence = repository.searchUserDeligence(email); //현재 스터디원의 성실도 정보 가져오기
+			
+		//4. 스터디원의 성실도 부여
+			studyUser.setDiligence(deligence + updateDeligeence); //현재 성실도에 스터디 종료 결과 성실도 보상 반영
+			repository.setUserDeligence(studyUser);
+		}
+	}
+	
+	/**
+	 * 스터디 종료시 필요한 작업을 수행한다.(상금과 성실도를 반영)
+	 * @param study
+	 * @throws Exception 
+	 */
+	public void endStudy(int studyId) throws Exception {
+		distributePrizeMoney(studyId);
+		updateStudyUserDiligence(studyId);
 	}
 
 }

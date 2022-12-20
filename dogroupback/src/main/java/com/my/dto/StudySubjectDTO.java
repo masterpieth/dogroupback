@@ -1,14 +1,19 @@
 package com.my.dto;
 
-public class StudySubjectDTOBomi {
+/**
+ * 스터디 과목 DTO
+ * @author bomi
+ *
+ */
+public class StudySubjectDTO {
 	private int studyId;
-	private SubjectDTOBomi subject;
+	private SubjectDTO subject;
 
-	public StudySubjectDTOBomi() {
+	public StudySubjectDTO() {
 		super();
 	}
 
-	public StudySubjectDTOBomi(int studyId, SubjectDTOBomi subject) {
+	public StudySubjectDTO(int studyId, SubjectDTO subject) {
 		super();
 		this.studyId = studyId;
 		this.subject = subject;
@@ -22,11 +27,11 @@ public class StudySubjectDTOBomi {
 		this.studyId = studyId;
 	}
 
-	public SubjectDTOBomi getSubject() {
+	public SubjectDTO getSubject() {
 		return subject;
 	}
 
-	public void setSubject(SubjectDTOBomi subject) {
+	public void setSubject(SubjectDTO subject) {
 		this.subject = subject;
 	}
 

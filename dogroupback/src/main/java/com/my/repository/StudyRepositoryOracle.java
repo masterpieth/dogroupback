@@ -6,17 +6,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
-import com.my.dto.StudyDTOBomi;
-import com.my.dto.StudySubjectDTOBomi;
+
+import com.my.dto.StudySubjectDTO;
 import com.my.dto.StudyUserDTO;
-import com.my.dto.SubjectDTOBomi;
+import com.my.dto.SubjectDTO;
+
 import com.my.dto.UserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
@@ -25,7 +26,10 @@ import com.my.exception.RemoveException;
 import com.my.sql.MyConnection;
 
 public class StudyRepositoryOracle implements StudyRepository {
-
+	
+	/**
+	 * 회원의 이메일로 진행된 모든 스터디 정보를 반환한다. 
+	 */
 	@Override
 	public List<StudyDTO> selectStudyByEmail(String email) throws FindException {
 		List<StudyDTO> list = new ArrayList<>();
@@ -34,8 +38,10 @@ public class StudyRepositoryOracle implements StudyRepository {
 		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
-			String selectStudyByEmailSQL = "SELECT s.* FROM study s JOIN USERS u ON(s.user_email = u.user_email)WHERE s.user_email = ?";
-
+			String selectStudyByEmailSQL = "SELECT st.*, s.subject_name, s.subject_parent_code "
+										+ "FROM STUDY st JOIN study_subject ss ON st.study_id = ss.study_id "
+										+ "JOIN subject s ON  ss.subject_code = s.subject_code "
+										+ "WHERE st.user_email = ?";
 			preStmt = conn.prepareStatement(selectStudyByEmailSQL);
 			preStmt.setString(1, email);
 			rs = preStmt.executeQuery();
@@ -51,15 +57,35 @@ public class StudyRepositoryOracle implements StudyRepository {
 				Date studyPostDate = rs.getDate("study_post_date");
 				Date studyStartDate = rs.getDate("study_start_date");
 				Date studyEndDate = rs.getDate("study_end_date");
-				int studyHomeworkPerWeek = rs.getInt("STUDY_HOMEWORK_PER_WEEK");
-				int studyPaid = rs.getInt("STUDY_PAID");
-				String studyContent = rs.getString("STUDY_CONTENT");
-
-				StudyDTO studyall = new StudyDTO(studyId, userEmail, studyTitle, studySize, studyFee,
+				int studyHomeworkPerWeek = rs.getInt("study_homework_per_week");
+				int studyPaid = rs.getInt("study_paid");
+				int studyGatheredSize = rs.getInt("study_gathered_size");
+				Clob studyContent = rs.getClob("study_content");
+				
+				StudyDTO study = new StudyDTO(studyId, userEmail, studyTitle, studySize, studyFee,
 						studyCertification, studyDiligenceCutline, studyPostDate, studyStartDate, studyEndDate,
-						studyHomeworkPerWeek, studyPaid, studyContent);
-
-				list.add(studyall);
+						studyHomeworkPerWeek, studyPaid, studyGatheredSize, studyContent);
+				
+				List<StudySubjectDTO> studySubjectList = new ArrayList<>(); //스터디 과목 정보를 저장할 LIST
+				StudySubjectDTO studySubject = new StudySubjectDTO(studyId, null); //스터디 과목 정보를 저장할 객체
+				
+				SubjectDTO subject = new SubjectDTO(rs.getString("subject_code"), rs.getString("subject_name"), null);
+				SubjectDTO parentSubject = new SubjectDTO(rs.getString("subject_parent_code"), null, null);
+				subject.setSubjectParent(parentSubject);
+				studySubject.setSubject(subject);
+				studySubjectList.add(studySubject);
+				
+				while (rs.next()) {
+					studySubject = new StudySubjectDTO(studyId, null);
+					subject = new SubjectDTO(rs.getString("subject_code"), rs.getString("subject_name"), null);
+					parentSubject = new SubjectDTO(rs.getString("subject_parent_code"), null, null);
+					subject.setSubjectParent(parentSubject);
+					studySubject.setSubject(subject);
+					studySubjectList.add(studySubject);
+				}
+				study.setSubjects(studySubjectList);
+				
+				list.add(study);
 			}
 			return list;
 
@@ -72,25 +98,110 @@ public class StudyRepositoryOracle implements StudyRepository {
 	}
 
 	/**
-	 * 스터디회원의 과제를 insert한다
+	 * 스터디의 현재 정보를 반환한다.
 	 */
 	@Override
-	public void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException {
+	public StudyDTO selectStudyByStudyId(int studyId) throws FindException {
 		Connection conn = null;
 		PreparedStatement preStmt = null;
 		ResultSet rs = null;
 		try {
+			String selectStudySQL = "SELECT st.*, --스터디\r\n" 
+					+ "       ss.subject_code, --스터디과목 코드 \r\n"
+					+ "       s.subject_name, --스터디 과목명\r\n"
+					+ "       (SELECT user_diligence FROM users WHERE user_email = st.user_email) diligence --스터디장 성실도\r\n"
+					+ "		  FROM STUDY st JOIN study_subject ss ON st.study_id = ss.study_id\r\n"
+					+ "             JOIN subject s ON  ss.subject_code = s.subject_code             \r\n"
+					+ "		  WHERE st.study_id= ?";
+			
 			conn = MyConnection.getConnection();
-			String insertHomeworkByEmailSQL = "INSERT INTO HOMEWORK VALUES(?, ?, ?)";
-			preStmt = conn.prepareStatement(insertHomeworkByEmailSQL);
-			preStmt.setDate(1, new java.sql.Date(created_at.getTime()));
-			preStmt.setInt(2, studyId);
-			preStmt.setString(3, email);
-			preStmt.executeUpdate();
+			preStmt = conn.prepareStatement(selectStudySQL);
+			preStmt.setInt(1, studyId);
+			rs = preStmt.executeQuery();
 
+			StudyDTO study = null;
+			if (rs.next()) {
+				study = new StudyDTO();
+				study.setStudyId(rs.getInt("study_id"));
+				study.setUserEmail(rs.getString("user_email"));
+				study.setStudyTitle(rs.getString("study_title"));
+				study.setStudyCertification(rs.getInt("study_certification"));
+				study.setStudySize(rs.getInt("study_size"));
+				study.setStudyFee(rs.getInt("study_fee"));
+				study.setStudyDiligenceCutline(rs.getInt("study_diligence_cutline"));
+				study.setStudyHomeworkPerWeek(rs.getInt("study_homework_per_week"));
+				study.setStudyPostDate(rs.getDate("study_post_date"));
+				study.setStudyStartDate(rs.getDate("study_start_date"));
+				study.setStudyEndDate(rs.getDate("study_end_date"));
+				study.setStudyContent(rs.getClob("study_content"));
+				study.setStudyPaid(rs.getInt("study_paid"));
+				study.setStudyGatheredSize(rs.getInt("study_gathered_size"));
+
+				UserDTO u = new UserDTO();
+				u.setDiligence(rs.getInt("diligence"));
+				u.setEmail(rs.getString("user_email"));
+				study.setStudyLeader(u);
+				
+				List<StudySubjectDTO> studySubjectList = new ArrayList<>(); //스터디 과목 정보를 저장할 LIST
+				StudySubjectDTO studySubject = new StudySubjectDTO(studyId, null); //스터디 과목 정보를 저장할 객체
+				
+				SubjectDTO subject = new SubjectDTO(rs.getString("subject_code"), rs.getString("subject_name"), null);
+				SubjectDTO parentSubject = new SubjectDTO(rs.getString("subject_parent_code"), null, null);
+				subject.setSubjectParent(parentSubject);
+				studySubject.setSubject(subject);
+				studySubjectList.add(studySubject);
+				
+				while (rs.next()) {
+					studySubject = new StudySubjectDTO(studyId, null);
+					subject = new SubjectDTO(rs.getString("subject_code"), rs.getString("subject_name"), null);
+					parentSubject = new SubjectDTO(rs.getString("subject_parent_code"), null, null);
+					subject.setSubjectParent(parentSubject);
+					studySubject.setSubject(subject);
+					studySubjectList.add(studySubject);
+				}
+				study.setSubjects(studySubjectList);
+				return study;
+			}
+			throw new FindException();
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new AddException("HomeWork Insert 실패");
+			throw new FindException(e.getMessage());
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+		}
+	}
+ 
+	/**
+	 * 스터디원 목록과 스터디원의 회원 정보를 반환한다.
+	 */
+	public List<StudyUserDTO> studyUsers(int studyId) throws FindException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
+		
+		String selectStudyUserSQL = "select * from study_users join users using (user_email) where study_id = ?";		
+		try {
+			conn = MyConnection.getConnection();
+			preStmt = conn.prepareStatement(selectStudyUserSQL);
+			preStmt.setInt(1, studyId);
+			rs = preStmt.executeQuery();
+			List<StudyUserDTO> studyUserList = new ArrayList<>();
+			StudyUserDTO user;
+			while (rs.next()) {
+				user = new StudyUserDTO();
+				user.setStudyId(studyId);
+				user.setDiligence(rs.getInt("user_diligence"));
+				user.setEmail(rs.getString("user_email"));
+				user.setName(rs.getString("user_name"));
+				user.setPassword(rs.getString("user_password"));
+				user.setStatus(rs.getInt("user_status"));
+				user.setUserBalance(rs.getInt("user_balance"));
+				studyUserList.add(user);
+			}
+			return studyUserList;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FindException(e.getMessage());
 		} finally {
 			MyConnection.close(rs, preStmt, conn);
 		}
@@ -130,149 +241,27 @@ public class StudyRepositoryOracle implements StudyRepository {
 			MyConnection.close(rs, preStmt, conn);
 		}
 	}
-
+	
 	/**
-	 * 스터디의 모든 정보를 반환한다. 해당 스터디 기본 정보 + 스터디의 현재 참여자수 + 스터디장의 성실도 + 스터디의 과목 정보 + 참여중인
-	 * 스터디원들의 정보(유저 기본 정보 + 과제 제출)를 반환한다.
+	 * 스터디회원의 과제를 insert한다
 	 */
 	@Override
-	public StudyDTOBomi selectStudy(int studyId) throws FindException {
+	public void insertHomeworkByEmail(String email, int studyId, Date created_at) throws AddException {
 		Connection conn = null;
 		PreparedStatement preStmt = null;
 		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
-			// ------- 스터디 기본 정보, 스터디원 인원수, 스터디장의 성실도, 스터디의 과목 목록 SEARCH START -------
-			String selectStudySQL = "SELECT st.*, --스터디\r\n" + "       ss.subject_code, --스터디과목 코드 \r\n"
-					+ "       s.subject_name, --스터디 과목명\r\n"
-					+ "       (SELECT COUNT(*) FROM study_users WHERE study_id=st.study_id) cnt, --스터디 참여자수 \r\n"
-					+ "       (SELECT user_diligence FROM users WHERE user_email = st.user_email) diligence --스터디장 성실도\r\n"
-					+ "		  FROM STUDY st JOIN study_subject ss ON st.study_id = ss.study_id\r\n"
-					+ "             JOIN subject s ON  ss.subject_code = s.subject_code             \r\n"
-					+ "		  WHERE st.study_id= ?";
-			preStmt = conn.prepareStatement(selectStudySQL);
-			preStmt.setInt(1, studyId);
-			rs = preStmt.executeQuery();
-
-			StudyDTOBomi study;
-			List<StudySubjectDTOBomi> studySubjectList = new ArrayList<>();
-
-			if (rs.next()) {
-				study = new StudyDTOBomi();
-				study.setStudyId(rs.getInt("study_id"));
-				study.setUserEmail(rs.getString("user_email"));
-				study.setStudyTitle(rs.getString("study_title"));
-				study.setStudyCertification(rs.getInt("study_certification"));
-				study.setStudySize(rs.getInt("study_size"));
-				study.setStudyFee(rs.getInt("study_fee"));
-				study.setStudyDiligenceCutline(rs.getInt("study_diligence_cutline"));
-				study.setStudyHomeworkPerWeek(rs.getInt("study_homework_per_week"));
-				study.setStudyPostDate(rs.getDate("study_post_date"));
-				study.setStudyStartDate(rs.getDate("study_start_date"));
-				study.setStudyEndDate(rs.getDate("study_end_date"));
-				study.setStudyContent(rs.getClob("study_content"));
-				study.setStudyPaid(rs.getInt("study_paid"));
-				study.setStudyUsers(rs.getInt("cnt"));// 해당스터디 현재 참가인원수
-
-				UserDTO u = new UserDTO();
-				u.setDiligence(rs.getInt("diligence"));
-				u.setEmail(rs.getString("user_email"));
-				study.setStudyLeader(u);
-				StudySubjectDTOBomi studySubjectDtoBomi = new StudySubjectDTOBomi();
-				SubjectDTOBomi subjectDToBomi = new SubjectDTOBomi(rs.getString("subject_code"),
-						rs.getString("subject_name"), null);
-				studySubjectDtoBomi.setSubject(subjectDToBomi);
-				studySubjectList.add(studySubjectDtoBomi);
-
-				while (rs.next()) {
-					studySubjectDtoBomi = new StudySubjectDTOBomi();
-					subjectDToBomi = new SubjectDTOBomi(rs.getString("subject_code"), rs.getString("subject_name"),
-							null);
-					studySubjectDtoBomi.setSubject(subjectDToBomi);
-					studySubjectList.add(studySubjectDtoBomi);
-				}
-				study.setSubjects(studySubjectList);
-				// ------- 스터디 기본 정보, 스터디원 인원수, 스터디장의 성실도, 스터디의 과목 목록 SEARCH END -------
-
-				// ------- 스터디원 목록(+성실도) SEARCH START -------
-				String selectStudyUserSQL = "select * from study_users join users using (user_email) where study_id = ?";
-				preStmt = conn.prepareStatement(selectStudyUserSQL);
-				preStmt.setInt(1, studyId);
-				rs = preStmt.executeQuery();
-
-				List<StudyUserDTO> studyUserList = new ArrayList<>();
-				StudyUserDTO user;
-				while (rs.next()) {
-					user = new StudyUserDTO(studyId, null, null);
-					user.setDiligence(rs.getInt("user_diligence"));
-					user.setEmail(rs.getString("user_email"));
-					user.setName(rs.getString("user_name"));
-					user.setPassword(rs.getString("user_password"));
-					user.setStatus(rs.getInt("user_status"));
-					user.setUserBalance(rs.getInt("user_balance"));
-					user.setHomeworkList(selectUserHomeworkByEmail(rs.getString("user_email"), studyId));
-					studyUserList.add(user);
-				}
-				study.setStudyUsers(studyUserList);
-				// ------- 스터디원 목록(+성실도) SEARCH END -------
-				return study;
-			}
-			throw new FindException();
+			String insertHomeworkByEmailSQL = "INSERT INTO HOMEWORK VALUES(?, ?, ?)";
+			preStmt = conn.prepareStatement(insertHomeworkByEmailSQL);
+			preStmt.setDate(1, new java.sql.Date(created_at.getTime()));
+			preStmt.setInt(2, studyId);
+			preStmt.setString(3, email);
+			preStmt.executeUpdate();
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new FindException(e.getMessage());
-		} finally {
-			MyConnection.close(rs, preStmt, conn);
-		}
-	}
-
-	/**
-	 * 스터디 정보를 반환한다.
-	 * 
-	 * @param studyId
-	 * @return studyDTO 스터디 기본 정보, 스터디 유저 목록
-	 * @throws FindException
-	 */
-	@Override
-	public StudyDTO selectStudyByStudyId(int studyId) throws FindException {
-		Connection conn = null;
-		PreparedStatement preStmt = null;
-		ResultSet rs = null;
-		try {
-			conn = MyConnection.getConnection();
-			String selectStudyByEmailSQL = "SELECT * FROM study WHERE study_id= ?";
-
-			preStmt = conn.prepareStatement(selectStudyByEmailSQL);
-			preStmt.setInt(1, studyId);
-			rs = preStmt.executeQuery();
-
-			StudyDTO study;
-			if (rs.next()) {
-				String userEmail = rs.getString("user_email");
-				String studyTitle = rs.getString("study_title");
-				int studySize = rs.getInt("study_size");
-				int studyFee = rs.getInt("study_fee");
-				int studyCertification = rs.getInt("study_certification");
-				int studyDiligenceCutline = rs.getInt("study_diligence_cutline");
-				Date studyPostDate = rs.getDate("study_post_date");
-				Date studyStartDate = rs.getDate("study_start_date");
-				Date studyEndDate = rs.getDate("study_end_date");
-				int studyHomeworkPerWeek = rs.getInt("STUDY_HOMEWORK_PER_WEEK");
-				int studyPaid = rs.getInt("STUDY_PAID");
-				String studyContent = rs.getString("STUDY_CONTENT");
-
-				study = new StudyDTO(studyId, userEmail, studyTitle, studySize, studyFee, studyCertification,
-						studyDiligenceCutline, studyPostDate, studyStartDate, studyEndDate, studyHomeworkPerWeek,
-						studyPaid, studyContent);
-
-				return study;
-			} else {
-				throw new FindException("해당 스터디가 존재하지 않습니다.");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new FindException(e.getMessage());
+			throw new AddException("HomeWork Insert 실패");
 		} finally {
 			MyConnection.close(rs, preStmt, conn);
 		}
@@ -321,33 +310,31 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 * 스터디를 Insert 한다. Study와 StudyUser(스터디장)가 한 트랜잭션에 insert되고, 실패시 롤백한다.
 	 */
 	@Override
-	public void insertStudy(StudyDTOBomi study) {
+	public void insertStudy(StudyDTO study) {
 		Connection conn = null;
 		PreparedStatement preStmt = null;
 		ResultSet rs = null;
 		try {
 			conn = MyConnection.getConnection();
 			conn.setAutoCommit(false);
-			String insertStudySQL = "INSERT INTO STUDY VALUES(study_seq.nextval, ?, ?, ?, ?, ?, ?, sysdate, ?, ?, ?, 0, ?)";
+			String insertStudySQL = "INSERT INTO STUDY VALUES(study_seq.nextval, ?, ?, ?, ?, ?, ?, sysdate, ?, ?, ?, 0, ?, 0)";
 			String insertedSeqSQL = "SELECT study_seq.currval as CURVAL FROM dual";
-
+			
+			//기본값 셋팅
 			preStmt = conn.prepareStatement(insertStudySQL);
-			// 기본값 세팅
 			preStmt.setString(1, study.getUserEmail());
 			preStmt.setString(2, study.getStudyTitle());
 			preStmt.setInt(3, study.getStudySize());
 			preStmt.setInt(4, study.getStudyFee());
 			preStmt.setInt(5, study.getStudyCertification());
-			preStmt.setInt(6, study.getStudyDiligenceCutline());
+			preStmt.setDouble(6, study.getStudyDiligenceCutline());
 			preStmt.setDate(7, new java.sql.Date(study.getStudyStartDate().getTime()));
 			preStmt.setDate(8, new java.sql.Date(study.getStudyEndDate().getTime()));
 			preStmt.setInt(9, study.getStudyHomeworkPerWeek());
-			// content Clob 세팅
-			Clob clob = conn.createClob();
-			clob.setString(1, study.getStudyContent());
-			preStmt.setClob(10, clob);
+			preStmt.setClob(10, study.getStudyContent());
 			preStmt.executeUpdate();
-
+			preStmt.close();
+			//스터디 번호 SELECT
 			preStmt = conn.prepareStatement(insertedSeqSQL);
 			rs = preStmt.executeQuery();
 			if (rs.next()) {
@@ -495,14 +482,14 @@ public class StudyRepositoryOracle implements StudyRepository {
 	 * 스터디 과목을 insert 한다 - insertStudy에서 connection을 받아서 한 트랜잭션에 있도록 한다.
 	 */
 	@Override
-	public void insertStudySubject(StudyDTOBomi study, List<StudySubjectDTOBomi> subjects, Connection conn)
+	public void insertStudySubject(StudyDTO study, List<StudySubjectDTO> subjects, Connection conn)
 			throws AddException {
 		PreparedStatement preStmt = null;
 		try {
 			// 스터디 과목 insert
 			String insertStudySubjectSQL = "INSERT INTO STUDY_SUBJECT VALUES(?, ?)";
 			preStmt = conn.prepareStatement(insertStudySubjectSQL);
-			for (StudySubjectDTOBomi subject : subjects) {
+			for (StudySubjectDTO subject : subjects) {
 				preStmt.setInt(1, study.getStudyId());
 				preStmt.setString(2, subject.getSubject().getSubjectCode());
 				preStmt.executeUpdate();
@@ -598,11 +585,14 @@ public class StudyRepositoryOracle implements StudyRepository {
 				Date studyEndDate = rs.getDate("study_end_date");
 				int studyHomeworkPerWeek = rs.getInt("STUDY_HOMEWORK_PER_WEEK");
 				int studyPaid = rs.getInt("STUDY_PAID");
-				String studyContent = rs.getString("STUDY_CONTENT");
-				StudyDTO studyall = new StudyDTO(studyId, userEmail, studyTitle, studySize, studyFee,
+				int studyGatheredSize = rs.getInt("STUDY_GATHERED_SIZE");
+				Clob studyContent = rs.getClob("STUDY_CONTENT");
+				
+				StudyDTO studyAll = new StudyDTO(studyId, userEmail, studyTitle, studySize, studyFee,
 						studyCertification, studyDiligenceCutline, studyPostDate, studyStartDate, studyEndDate,
-						studyHomeworkPerWeek, studyPaid, studyContent);
-				list.add(studyall);
+						studyHomeworkPerWeek, studyPaid, studyGatheredSize, studyContent);
+				
+				list.add(studyAll);
 			}
 			return list;
 		} catch (Exception e) {
@@ -610,6 +600,96 @@ public class StudyRepositoryOracle implements StudyRepository {
 			throw new FindException(e.getMessage());
 		} finally {
 			MyConnection.close(rs, preStmt, conn);
+		}
+	}
+
+
+	/**
+	 * 회원의 성실도를 반환한다.
+	 * @throws FindException 
+	 */
+	@Override
+	public int searchUserDeligence(String email) throws FindException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		ResultSet rs = null;
+		String studyStudySQL = null;
+		try {
+			conn = MyConnection.getConnection();
+			studyStudySQL = "SELECT user_diligence FROM users WHERE user_email = ?";
+			preStmt = conn.prepareStatement(studyStudySQL);
+			preStmt.setString(1, email);
+			rs = preStmt.executeQuery();
+			rs.next();
+			return rs.getInt(0);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FindException(e.getMessage());
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+		}
+	}
+	
+	/**
+	 * 회원의 성실도를 반영한다. (스터디 종료 성실도 결과 반영)
+	 * @throws FindException 
+	 */
+	@Override
+	public void setUserDeligence(StudyUserDTO studyUser) throws ModifyException {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		String studyStudySQL = null;
+		try {
+			conn = MyConnection.getConnection();
+			studyStudySQL = "UPDATE users SET user_diligence = ? WHERE user_email = ?";
+			preStmt = conn.prepareStatement(studyStudySQL);
+			preStmt.setDouble(1, studyUser.getDiligence());
+			preStmt.setString(2, studyUser.getEmail());
+			preStmt.executeQuery();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ModifyException(e.getMessage());
+		} finally {
+			MyConnection.close(preStmt, conn);
+		}
+	}
+	
+	/**
+	 * 회원에게 스터디 종료에 따른 금액을 환급한다.
+	 */
+	@Override
+	public void refundToUser(int studyId, String email, int prize) {
+		Connection conn = null;
+		PreparedStatement preStmt = null;
+		CallableStatement calStmt = null;
+		ResultSet rs = null;
+		try {
+			conn = MyConnection.getConnection();
+			conn.setAutoCommit(false);
+			// 지갑 관련 프로시저 스터디원에게 환급 실시   
+			String procSQL = "{ call proc_wallet_prize(?, ?, ?) }";
+			calStmt = conn.prepareCall(procSQL);
+			calStmt.setString(1, email);
+			calStmt.setInt(2, prize);
+			calStmt.setInt(3, studyId);
+			calStmt.executeUpdate();
+			conn.commit();
+		} catch (Exception e) {
+			try {
+				e.printStackTrace();
+				conn.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+		} finally {
+			MyConnection.close(rs, preStmt, conn);
+			if (calStmt != null) {
+				try {
+					calStmt.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }

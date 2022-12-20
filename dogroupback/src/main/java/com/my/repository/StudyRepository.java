@@ -6,8 +6,7 @@ import java.util.List;
 
 import com.my.dto.HomeworkDTO;
 import com.my.dto.StudyDTO;
-import com.my.dto.StudyDTOBomi;
-import com.my.dto.StudySubjectDTOBomi;
+import com.my.dto.StudySubjectDTO;
 import com.my.dto.StudyUserDTO;
 import com.my.exception.AddException;
 import com.my.exception.FindException;
@@ -46,14 +45,13 @@ public interface StudyRepository {
 	List<HomeworkDTO> selectUserHomeworkByEmail(String userEmail, int studyId) throws FindException;
 
 	/**
-	 * 스터디의 모든 정보를 반환한다.
+	 * 스터디의 정보를 반환한다.
 	 * 
 	 * @param studyId
-	 * @return 스터디 기본 정보 + 스터디의 현재 참여자수 + 스터디장의 성실도 + 스터디의 과목 정보 + 참여중인 스터디원들의 정보(유저
-	 *         기본 정보 + 과제 제출 + 유효 출석일)
+	 * @return 스터디의 기본 정보를 반환한다. 스터디의 현재 참여자수 + 스터디장의 성실도 + 스터디의 과목 정보
 	 * @throws FindException 상세 조회중 오류시 발생
 	 */
-	StudyDTOBomi selectStudy(int studyId) throws FindException;
+	StudyDTO selectStudyByStudyId(int studyId) throws FindException;
 
 	/**
 	 * 스터디에 해당하는 제출한 과제를 반환한다.
@@ -65,21 +63,12 @@ public interface StudyRepository {
 	List<HomeworkDTO> selectHomeworkByStudyId(int studyId) throws FindException;
 
 	/**
-	 * 스터디ID로 스터디의 기본정보를 반환한다.
-	 * 
-	 * @param studyId
-	 * @return 스터디 기본정보
-	 * @throws FindException
-	 */
-	StudyDTO selectStudyByStudyId(int studyId) throws FindException;
-
-	/**
 	 * 스터디를 Insert 한다
 	 * 
 	 * @param study 추가할 스터디 내용
 	 * @throws AddException 추가 중 오류시 발생한다.
 	 */
-	void insertStudy(StudyDTOBomi study) throws AddException;
+	void insertStudy(StudyDTO study) throws AddException;
 
 	/**
 	 * 스터디를 update한다
@@ -117,7 +106,7 @@ public interface StudyRepository {
 	 * @param conn				insertStudy시의 connection
 	 * @throws AddException		실패시 발생시킬 예외
 	 */
-	void insertStudySubject(StudyDTOBomi study, List<StudySubjectDTOBomi> subjects, Connection conn) throws AddException;
+	void insertStudySubject(StudyDTO study, List<StudySubjectDTO> subjects, Connection conn) throws AddException;
 
 	/**
 	 * 조건에 맞는 스터디 개수를 카운트하여 반환한다. (조건 : 타이틀명, 스터디 정원)
@@ -133,4 +122,27 @@ public interface StudyRepository {
 	 * @return 스터디
 	 */
 	List<StudyDTO> selectStudy(int currentPage, int cntPerPage, String studyTitle, int studySize) throws FindException;
+	
+	/**
+	 * 회원의 성실도를 반환한다.
+	 * @param email
+	 * @return 회원의 성실도
+	 * @throws FindException 
+	 */
+	int searchUserDeligence(String email) throws FindException;
+	
+	/**
+	 * 회원의 성실도를 반영한다. (스터디 종료 성실도 결과 반영)
+	 * @param studyUser
+	 * @throws ModifyException 
+	 */
+	void setUserDeligence(StudyUserDTO studyUser) throws ModifyException;
+
+	/**
+	 * 회원에게 스터디 종료에 따른 금액을 환급한다.
+	 * @param email
+	 * @param i
+	 */
+	void refundToUser(int studyId, String email, int prize);
+
 }
